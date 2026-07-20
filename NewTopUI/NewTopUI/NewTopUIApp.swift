@@ -38,6 +38,8 @@ private final class DraggablePanel: NSPanel {
 }
 
 final class MonitorPanelController: NSObject {
+    private static let panelOriginDefaultsKey = "monitorPanelOrigin"
+
     private let model = ResourceMonitorModel()
     private let panel: NSPanel
     private var statusItem: NSStatusItem?
@@ -72,6 +74,17 @@ final class MonitorPanelController: NSObject {
         hostingController.view.layoutSubtreeIfNeeded()
         let fittingSize = hostingController.view.fittingSize
         panel.setContentSize(fittingSize)
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(panelDidMove(_:)),
+            name: NSWindow.didMoveNotification,
+            object: panel
+        )
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     func installMenuBarItem() {
@@ -84,6 +97,11 @@ final class MonitorPanelController: NSObject {
         button.action = #selector(statusItemClicked(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem = item
+
+        DispatchQueue.main.async { [weak self, weak button] in
+            guard let self, let button else { return }
+            show(relativeTo: button)
+        }
     }
 
     func stop() {
@@ -112,21 +130,47 @@ final class MonitorPanelController: NSObject {
         NSApplication.shared.terminate(nil)
     }
 
+    @objc private func panelDidMove(_: Notification) {
+        UserDefaults.standard.set(
+            NSStringFromPoint(panel.frame.origin),
+            forKey: Self.panelOriginDefaultsKey
+        )
+    }
+
     private func show(relativeTo button: NSStatusBarButton) {
-        if !hasPositionedPanel, let buttonWindow = button.window {
-            let buttonFrame = buttonWindow.convertToScreen(button.frame)
-            let screenFrame = buttonWindow.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
-            let panelSize = panel.frame.size
-            let idealX = buttonFrame.midX - panelSize.width / 2
-            let x = min(max(idealX, screenFrame.minX + 8), screenFrame.maxX - panelSize.width - 8)
-            let y = min(buttonFrame.minY - panelSize.height - 8, screenFrame.maxY - panelSize.height - 8)
-            panel.setFrameOrigin(NSPoint(x: x, y: max(y, screenFrame.minY + 8)))
-            hasPositionedPanel = true
+        if !hasPositionedPanel {
+            if let savedOrigin = savedPanelOrigin() {
+                panel.setFrameOrigin(savedOrigin)
+                hasPositionedPanel = true
+            } else if let buttonWindow = button.window {
+                let buttonFrame = buttonWindow.convertToScreen(button.frame)
+                let screenFrame = buttonWindow.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+                let panelSize = panel.frame.size
+                let idealX = buttonFrame.midX - panelSize.width / 2
+                let x = min(max(idealX, screenFrame.minX + 8), screenFrame.maxX - panelSize.width - 8)
+                let y = min(buttonFrame.minY - panelSize.height - 8, screenFrame.maxY - panelSize.height - 8)
+                panel.setFrameOrigin(NSPoint(x: x, y: max(y, screenFrame.minY + 8)))
+                hasPositionedPanel = true
+            }
         }
 
         model.start()
         NSApplication.shared.activate()
         panel.makeKeyAndOrderFront(nil)
+    }
+
+    private func savedPanelOrigin() -> NSPoint? {
+        guard let originString = UserDefaults.standard.string(forKey: Self.panelOriginDefaultsKey) else {
+            return nil
+        }
+
+        let origin = NSPointFromString(originString)
+        let savedFrame = NSRect(origin: origin, size: panel.frame.size)
+        guard NSScreen.screens.contains(where: { $0.visibleFrame.intersects(savedFrame) }) else {
+            return nil
+        }
+
+        return origin
     }
 
     private func hide() {

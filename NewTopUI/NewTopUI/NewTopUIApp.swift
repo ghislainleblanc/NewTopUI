@@ -15,21 +15,26 @@ struct NewTopUIApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var monitorController: MonitorPanelController?
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    func applicationDidFinishLaunching(_: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
         let controller = MonitorPanelController()
         monitorController = controller
         controller.installMenuBarItem()
     }
 
-    func applicationWillTerminate(_ notification: Notification) {
+    func applicationWillTerminate(_: Notification) {
         monitorController?.stop()
     }
 }
 
 private final class DraggablePanel: NSPanel {
-    override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { false }
+    override var canBecomeKey: Bool {
+        true
+    }
+
+    override var canBecomeMain: Bool {
+        false
+    }
 }
 
 final class MonitorPanelController: NSObject {

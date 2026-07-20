@@ -46,9 +46,9 @@ final class SystemMetricsReader {
             vm_deallocate(mach_task_self_, vm_address_t(bitPattern: processorInfo), byteCount)
         }
 
-        return (0..<Int(processorCount)).map { core in
+        return (0 ..< Int(processorCount)).map { core in
             let offset = core * Int(CPU_STATE_MAX)
-            return (0..<Int(CPU_STATE_MAX)).map { state in
+            return (0 ..< Int(CPU_STATE_MAX)).map { state in
                 UInt64(UInt32(bitPattern: processorInfo[offset + state]))
             }
         }
@@ -96,13 +96,13 @@ final class SystemMetricsReader {
                 kCFAllocatorDefault,
                 0
             )?.takeRetainedValue(),
-            let statistics = property as? [String: Any]
+                let statistics = property as? [String: Any]
             else { continue }
 
             let preferredKeys = [
                 "Device Utilization %",
                 "GPU Core Utilization",
-                "Renderer Utilization %"
+                "Renderer Utilization %",
             ]
             for key in preferredKeys {
                 if let number = statistics[key] as? NSNumber {

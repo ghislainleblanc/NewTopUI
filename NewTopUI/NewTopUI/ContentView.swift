@@ -35,6 +35,7 @@ struct ContentView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(.ultraThinMaterial)
+
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(
                         LinearGradient(
@@ -43,6 +44,7 @@ struct ContentView: View {
                             endPoint: .bottomTrailing
                         )
                     )
+
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75)
             }
@@ -60,6 +62,7 @@ private struct ContentHeader: View {
             ZStack {
                 Circle()
                     .fill(Color.cyan.opacity(0.15))
+
                 Image(systemName: "waveform.path.ecg")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.cyan)
@@ -69,10 +72,12 @@ private struct ContentHeader: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("System Pulse")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
+
                 HStack(spacing: 5) {
                     Circle()
                         .fill(.green)
                         .frame(width: 5, height: 5)
+
                     Text("LIVE · 1 SEC")
                         .font(.system(size: 9, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -82,6 +87,7 @@ private struct ContentHeader: View {
             Spacer()
 
             HeaderButton(symbol: "power", help: "Quit System Pulse", action: onQuit)
+
             HeaderButton(symbol: "xmark", help: "Hide monitor", action: onClose)
         }
         .contentShape(Rectangle())
@@ -92,8 +98,11 @@ private struct ContentFooter: View {
     var body: some View {
         HStack {
             Image(systemName: "hand.draw")
+
             Text("Drag anywhere to move")
+
             Spacer()
+
             Text("Click the menu bar CPU icon to reopen")
         }
         .font(.system(size: 9, weight: .medium, design: .rounded))
@@ -143,9 +152,12 @@ private struct SectionTitle: View {
         HStack(spacing: 6) {
             Image(systemName: symbol)
                 .foregroundStyle(color)
+
             Text(title.uppercased())
                 .foregroundStyle(.secondary)
+
             Spacer()
+
             Text(value)
                 .foregroundStyle(.primary)
         }
@@ -165,6 +177,7 @@ private struct CPUSection: View {
                 color: .cyan,
                 value: model.averageCPUFraction.formatted(.percent.precision(.fractionLength(0)))
             )
+
             CoreBarGraph(cores: model.cores)
         }
     }
@@ -185,6 +198,7 @@ private struct CoreBarGraph: View {
                         ZStack(alignment: .bottom) {
                             Capsule()
                                 .fill(Color.primary.opacity(0.065))
+
                             Capsule()
                                 .fill(
                                     LinearGradient(
@@ -221,6 +235,7 @@ private struct GPUSection: View {
                 color: .pink,
                 value: model.gpuFraction?.formatted(.percent.precision(.fractionLength(0))) ?? "N/A"
             )
+
             MiniBarHistory(values: model.gpuHistory, color: .pink)
                 .frame(height: 48)
         }
@@ -244,6 +259,7 @@ private struct MemorySection: View {
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color.primary.opacity(0.07))
+
                         Capsule()
                             .fill(LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing))
                             .frame(width: max(4, proxy.size.width * memory.fraction))
@@ -290,8 +306,11 @@ private struct NetworkSection: View {
             HStack {
                 Label("NETWORK", systemImage: "network")
                     .foregroundStyle(.secondary)
+
                 Spacer()
+
                 NetworkSpeed(label: "DOWN", symbol: "arrow.down", color: .green, bytes: model.receivedBytesPerSecond)
+
                 NetworkSpeed(label: "UP", symbol: "arrow.up", color: .blue, bytes: model.sentBytesPerSecond)
             }
             .font(.system(size: 10, weight: .bold, design: .rounded))
@@ -312,8 +331,10 @@ private struct NetworkSpeed: View {
         HStack(spacing: 3) {
             Image(systemName: symbol)
                 .foregroundStyle(color)
+
             Text(label)
                 .foregroundStyle(.tertiary)
+
             Text(ByteFormatting.speed(bytes))
                 .foregroundStyle(.primary)
                 .monospacedDigit()
@@ -328,7 +349,7 @@ private struct NetworkLineGraph: View {
         Canvas { context, size in
             let received = points.map(\.receivedBytesPerSecond)
             let sent = points.map(\.sentBytesPerSecond)
-            let peak = max((received + sent).max() ?? 0, 1_024)
+            let peak = max((received + sent).max() ?? 0, 1024)
 
             for fraction in [0.25, 0.5, 0.75] {
                 var gridLine = Path()

@@ -52,6 +52,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 85F0B002300DA9C20036AEE2 /* Build configuration list for PBXNativeTarget "NewTopUI" */;
 			buildPhases = (
+				D4C6E8A12026072000000001 /* SwiftFormat */,
 				85F0AFF3300DA9C20036AEE2 /* Sources */,
 				85F0AFF4300DA9C20036AEE2 /* Frameworks */,
 				85F0AFF5300DA9C20036AEE2 /* Resources */,
@@ -114,6 +115,29 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		D4C6E8A12026072000000001 /* SwiftFormat */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftFormat;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\n\nexport SDKROOT=\"$(xcrun --sdk macosx --show-sdk-path)\"\nswift run -c release --package-path \"$SRCROOT/BuildTools\" swiftformat \"$SRCROOT\" --config \"$SRCROOT/../.swiftformat\"\nswift run -c release --package-path \"$SRCROOT/BuildTools\" swiftui-format \"$SRCROOT/NewTopUI\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		85F0AFF3300DA9C20036AEE2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -163,7 +187,7 @@
 				DEVELOPMENT_TEAM = 9Y789C28ZZ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -227,7 +251,7 @@
 				DEVELOPMENT_TEAM = 9Y789C28ZZ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

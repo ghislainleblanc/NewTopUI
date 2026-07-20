@@ -58,10 +58,10 @@ final class ResourceMonitorModel {
 
     init() {
         let coreCount = max(ProcessInfo.processInfo.processorCount, 1)
-        cores = (0..<coreCount).map { CoreUsage(id: $0, fraction: 0) }
+        cores = (0 ..< coreCount).map { CoreUsage(id: $0, fraction: 0) }
         gpuFraction = nil
         gpuHistory = Array(repeating: 0, count: 28)
-        networkHistory = (0..<36).map {
+        networkHistory = (0 ..< 36).map {
             NetworkPoint(id: $0, receivedBytesPerSecond: 0, sentBytesPerSecond: 0)
         }
         memory = MemoryUsage()

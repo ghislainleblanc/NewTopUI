@@ -272,7 +272,7 @@ private struct MemorySection: View {
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
             }
-            .frame(height: 48, alignment: .center)
+            .frame(height: 48, alignment: .bottom)
         }
         .frame(maxWidth: .infinity)
     }
@@ -285,15 +285,19 @@ private struct MiniBarHistory: View {
     var body: some View {
         GeometryReader { proxy in
             let spacing: CGFloat = 2
+            let textDescenderInset: CGFloat = 3
+            let graphHeight = proxy.size.height - textDescenderInset
             let width = max((proxy.size.width - CGFloat(max(values.count - 1, 0)) * spacing) / CGFloat(max(values.count, 1)), 2)
 
             HStack(alignment: .bottom, spacing: spacing) {
                 ForEach(Array(values.enumerated()), id: \.offset) { _, value in
                     Capsule()
                         .fill(color.opacity(0.25 + value * 0.75))
-                        .frame(width: width, height: max(3, proxy.size.height * value))
+                        .frame(width: width, height: max(3, graphHeight * value))
                 }
             }
+            .padding(.bottom, textDescenderInset)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
         }
     }
 }

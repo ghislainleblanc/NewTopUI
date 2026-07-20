@@ -7,7 +7,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            header
+            ContentHeader(onQuit: onQuit, onClose: onClose)
 
             MetricCard {
                 CPUSection(model: model)
@@ -27,7 +27,7 @@ struct ContentView: View {
                 NetworkSection(model: model)
             }
 
-            footer
+            ContentFooter()
         }
         .padding(16)
         .frame(width: 420)
@@ -49,8 +49,13 @@ struct ContentView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
+}
 
-    private var header: some View {
+private struct ContentHeader: View {
+    let onQuit: () -> Void
+    let onClose: () -> Void
+
+    var body: some View {
         HStack(spacing: 10) {
             ZStack {
                 Circle()
@@ -81,8 +86,10 @@ struct ContentView: View {
         }
         .contentShape(Rectangle())
     }
+}
 
-    private var footer: some View {
+private struct ContentFooter: View {
+    var body: some View {
         HStack {
             Image(systemName: "hand.draw")
             Text("Drag anywhere to move")

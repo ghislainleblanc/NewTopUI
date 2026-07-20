@@ -71,8 +71,9 @@ final class MonitorPanelController: NSObject {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.isReleasedWhenClosed = false
 
-        hostingController.view.layoutSubtreeIfNeeded()
-        let fittingSize = hostingController.view.fittingSize
+        let fittingSize = hostingController.sizeThatFits(
+            in: NSSize(width: 420, height: CGFloat.greatestFiniteMagnitude)
+        )
         panel.setContentSize(fittingSize)
 
         NotificationCenter.default.addObserver(

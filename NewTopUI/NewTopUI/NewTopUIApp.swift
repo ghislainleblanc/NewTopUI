@@ -126,6 +126,14 @@ final class MonitorPanelController: NSObject {
         }
     }
 
+    @objc private func showAbout() {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+        NSApplication.shared.activate()
+        NSApplication.shared.orderFrontStandardAboutPanel(
+            options: [.applicationVersion: version]
+        )
+    }
+
     @objc private func quit() {
         NSApplication.shared.terminate(nil)
     }
@@ -180,6 +188,10 @@ final class MonitorPanelController: NSObject {
 
     private func showContextMenu(relativeTo button: NSStatusBarButton) {
         let menu = NSMenu()
+        let aboutItem = NSMenuItem(title: "About System Pulse", action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+        menu.addItem(.separator())
         let showItem = NSMenuItem(title: panel.isVisible ? "Hide System Pulse" : "Show System Pulse", action: #selector(toggleFromMenu), keyEquivalent: "")
         showItem.target = self
         menu.addItem(showItem)

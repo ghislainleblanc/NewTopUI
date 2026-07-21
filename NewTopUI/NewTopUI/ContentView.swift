@@ -192,20 +192,36 @@ private struct CoreBarGraph: View {
 
             HStack(alignment: .bottom, spacing: spacing) {
                 ForEach(cores) { core in
+                    let barHeight = max(3, 54 * core.fraction)
+                    let trackCornerRadius = min(5, barWidth / 4)
+                    let fillCornerRadius = min(trackCornerRadius, barHeight / 4)
+
                     VStack(spacing: 4) {
                         ZStack(alignment: .bottom) {
-                            Capsule()
-                                .fill(Color.primary.opacity(0.065))
+                            UnevenRoundedRectangle(
+                                cornerRadii: RectangleCornerRadii(
+                                    topLeading: trackCornerRadius,
+                                    topTrailing: trackCornerRadius
+                                ),
+                                style: .continuous
+                            )
+                            .fill(Color.primary.opacity(0.065))
 
-                            Capsule()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.cyan, .indigo],
-                                        startPoint: .bottom,
-                                        endPoint: .top
-                                    )
+                            UnevenRoundedRectangle(
+                                cornerRadii: RectangleCornerRadii(
+                                    topLeading: fillCornerRadius,
+                                    topTrailing: fillCornerRadius
+                                ),
+                                style: .continuous
+                            )
+                            .fill(
+                                LinearGradient(
+                                    colors: [.cyan, .indigo],
+                                    startPoint: .bottom,
+                                    endPoint: .top
                                 )
-                                .frame(height: max(3, 54 * core.fraction))
+                            )
+                            .frame(height: barHeight)
                         }
                         .frame(width: barWidth, height: 54)
                         .help("Core \(core.id + 1): \(core.fraction.formatted(.percent.precision(.fractionLength(0))))")

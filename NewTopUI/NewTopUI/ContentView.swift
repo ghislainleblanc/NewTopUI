@@ -18,9 +18,7 @@ struct ContentView: View {
                     GPUSection(model: model)
                 }
 
-                MetricCard {
-                    MemorySection(memory: model.memory)
-                }
+                MemoryCard(memory: model.memory)
             }
 
             MetricCard {
@@ -267,14 +265,152 @@ private struct MemorySection: View {
                 }
                 .frame(height: 9)
 
-                Text("\(ByteFormatting.compact(memory.usedBytes)) of \(ByteFormatting.compact(memory.totalBytes))")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                HStack(spacing: 5) {
+                    Text("\(ByteFormatting.compact(memory.usedBytes)) of \(ByteFormatting.compact(memory.totalBytes))")
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 8, weight: .semibold))
+                        .foregroundStyle(.orange.opacity(0.8))
+                }
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
             }
             .frame(height: 48, alignment: .bottom)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+private struct MemoryCard: View {
+    let memory: MemoryUsage
+
+    @State private var isShowingDetails = false
+
+    var body: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.42)) {
+                isShowingDetails.toggle()
+            }
+        } label: {
+            ZStack {
+                MetricCard {
+                    MemorySection(memory: memory)
+                }
+                .opacity(isShowingDetails ? 0 : 1)
+
+                MetricCard {
+                    MemoryBreakdownSection(memory: memory)
+                }
+                .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
+                .opacity(isShowingDetails ? 1 : 0)
+            }
+            .rotation3DEffect(
+                .degrees(isShowingDetails ? 180 : 0),
+                axis: (x: 0, y: 1, z: 0),
+                perspective: 0.6
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .help(isShowingDetails ? "Click to show memory summary" : "Click for a detailed memory breakdown")
+        .accessibilityHint(isShowingDetails ? "Shows the memory summary" : "Shows memory categories")
+    }
+}
+
+private struct MemoryBreakdownSection: View {
+    let memory: MemoryUsage
+
+    var body: some View {
+        VStack(spacing: 5) {
+            SectionTitle(
+                title: "Memory details",
+                symbol: "arrow.uturn.backward.circle",
+                color: .orange,
+                value: ByteFormatting.compact(memory.totalBytes)
+            )
+
+            VStack(spacing: 1) {
+                MemoryBreakdownRow(
+                    title: "App",
+                    color: .orange,
+                    bytes: memory.applicationBytes,
+                    totalBytes: memory.totalBytes,
+                    help: "Anonymous, non-purgeable memory used by apps and system processes"
+                )
+
+                MemoryBreakdownRow(
+                    title: "Wired",
+                    color: .pink,
+                    bytes: memory.wiredBytes,
+                    totalBytes: memory.totalBytes,
+                    help: "Memory that must remain in physical RAM"
+                )
+
+                MemoryBreakdownRow(
+                    title: "Compressed",
+                    color: .purple,
+                    bytes: memory.compressedBytes,
+                    totalBytes: memory.totalBytes,
+                    help: "Physical RAM occupied by compressed memory"
+                )
+
+                MemoryBreakdownRow(
+                    title: "Cached",
+                    color: .cyan,
+                    bytes: memory.cachedBytes,
+                    totalBytes: memory.totalBytes,
+                    help: "File-backed and purgeable memory that macOS can quickly reuse"
+                )
+
+                MemoryBreakdownRow(
+                    title: "Available",
+                    color: .green,
+                    bytes: memory.availableBytes,
+                    totalBytes: memory.totalBytes,
+                    help: "Physical RAM not currently assigned to another category"
+                )
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct MemoryBreakdownRow: View {
+    let title: String
+    let color: Color
+    let bytes: UInt64
+    let totalBytes: UInt64
+    let help: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(color)
+                .frame(width: 5, height: 5)
+
+            Text(title)
+                .foregroundStyle(.secondary)
+
+            Spacer(minLength: 2)
+
+            Text(ByteFormatting.compact(bytes))
+                .foregroundStyle(.primary)
+
+            Text(memoryFraction.formatted(.percent.precision(.fractionLength(0))))
+                .foregroundStyle(.tertiary)
+                .frame(width: 25, alignment: .trailing)
+        }
+        .font(.system(size: 8, weight: .medium, design: .rounded))
+        .monospacedDigit()
+        .help(help)
+    }
+
+    private var memoryFraction: Double {
+        guard totalBytes > 0 else { return 0 }
+        return min(max(Double(bytes) / Double(totalBytes), 0), 1)
     }
 }
 

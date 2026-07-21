@@ -182,8 +182,18 @@ final class SystemMetricsReader {
             return MemoryUsage(totalBytes: total)
         }
         let pageSize = UInt64(hostPageSize)
-        let availablePages = UInt64(statistics.free_count) + UInt64(statistics.speculative_count)
-        let availableBytes = min(availablePages * pageSize, total)
-        return MemoryUsage(usedBytes: total - availableBytes, totalBytes: total)
+        let internalPages = UInt64(statistics.internal_page_count)
+        let purgeablePages = min(UInt64(statistics.purgeable_count), internalPages)
+
+        return MemoryUsage(
+            applicationBytes: min((internalPages - purgeablePages) * pageSize, total),
+            wiredBytes: min(UInt64(statistics.wire_count) * pageSize, total),
+            compressedBytes: min(UInt64(statistics.compressor_page_count) * pageSize, total),
+            cachedBytes: min(
+                (UInt64(statistics.external_page_count) + purgeablePages) * pageSize,
+                total
+            ),
+            totalBytes: total
+        )
     }
 }

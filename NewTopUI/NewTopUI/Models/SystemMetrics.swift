@@ -13,8 +13,20 @@ struct NetworkPoint: Identifiable, Equatable {
 }
 
 struct MemoryUsage: Equatable {
-    var usedBytes: UInt64 = 0
+    var applicationBytes: UInt64 = 0
+    var wiredBytes: UInt64 = 0
+    var compressedBytes: UInt64 = 0
+    var cachedBytes: UInt64 = 0
     var totalBytes: UInt64 = ProcessInfo.processInfo.physicalMemory
+
+    var usedBytes: UInt64 {
+        min(applicationBytes + wiredBytes + compressedBytes, totalBytes)
+    }
+
+    var availableBytes: UInt64 {
+        let accountedBytes = min(usedBytes + cachedBytes, totalBytes)
+        return totalBytes - accountedBytes
+    }
 
     var fraction: Double {
         guard totalBytes > 0 else { return 0 }

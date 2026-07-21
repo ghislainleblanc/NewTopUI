@@ -94,7 +94,9 @@ final class MonitorPanelController: NSObject {
     func installMenuBarItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         guard let button = item.button else { return }
-        button.image = NSImage(systemSymbolName: "cpu", accessibilityDescription: "System Pulse")
+        let iconConfiguration = NSImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        button.image = NSImage(systemSymbolName: "cpu", accessibilityDescription: "System Pulse")?
+            .withSymbolConfiguration(iconConfiguration)
         button.image?.isTemplate = true
         button.toolTip = "System Pulse"
         button.target = self

@@ -39,6 +39,9 @@ private final class DraggablePanel: NSPanel {
 
 final class MonitorPanelController: NSObject {
     private static let panelOriginDefaultsKey = "monitorPanelOrigin"
+    private static let panelScreenDefaultsKey = "monitorPanelScreen"
+    private static let panelScreenOriginXDefaultsKey = "monitorPanelScreenOriginX"
+    private static let panelScreenOriginYDefaultsKey = "monitorPanelScreenOriginY"
 
     private let model = ResourceMonitorModel()
     private let panel: NSPanel
@@ -106,6 +109,9 @@ final class MonitorPanelController: NSObject {
     }
 
     func stop() {
+        if hasPositionedPanel {
+            savePanelPlacement()
+        }
         model.stop()
     }
 
@@ -140,10 +146,20 @@ final class MonitorPanelController: NSObject {
     }
 
     @objc private func panelDidMove(_: Notification) {
-        UserDefaults.standard.set(
-            NSStringFromPoint(panel.frame.origin),
-            forKey: Self.panelOriginDefaultsKey
-        )
+        savePanelPlacement()
+    }
+
+    private func savePanelPlacement() {
+        let defaults = UserDefaults.standard
+        defaults.set(NSStringFromPoint(panel.frame.origin), forKey: Self.panelOriginDefaultsKey)
+
+        guard let screen = panel.screen, let screenIdentifier = screenIdentifier(for: screen) else {
+            return
+        }
+
+        defaults.set(screenIdentifier, forKey: Self.panelScreenDefaultsKey)
+        defaults.set(panel.frame.minX - screen.frame.minX, forKey: Self.panelScreenOriginXDefaultsKey)
+        defaults.set(panel.frame.minY - screen.frame.minY, forKey: Self.panelScreenOriginYDefaultsKey)
     }
 
     private func show(relativeTo button: NSStatusBarButton) {
@@ -169,7 +185,27 @@ final class MonitorPanelController: NSObject {
     }
 
     private func savedPanelOrigin() -> NSPoint? {
-        guard let originString = UserDefaults.standard.string(forKey: Self.panelOriginDefaultsKey) else {
+        let defaults = UserDefaults.standard
+
+        if let savedScreenIdentifier = defaults.string(forKey: Self.panelScreenDefaultsKey) {
+            guard
+                let screen = NSScreen.screens.first(where: {
+                    screenIdentifier(for: $0) == savedScreenIdentifier
+                }),
+                let relativeX = defaults.object(forKey: Self.panelScreenOriginXDefaultsKey) as? NSNumber,
+                let relativeY = defaults.object(forKey: Self.panelScreenOriginYDefaultsKey) as? NSNumber
+            else {
+                return nil
+            }
+
+            let origin = NSPoint(
+                x: screen.frame.minX + relativeX.doubleValue,
+                y: screen.frame.minY + relativeY.doubleValue
+            )
+            return visibleOrigin(origin, on: screen)
+        }
+
+        guard let originString = defaults.string(forKey: Self.panelOriginDefaultsKey) else {
             return nil
         }
 
@@ -180,6 +216,30 @@ final class MonitorPanelController: NSObject {
         }
 
         return origin
+    }
+
+    private func screenIdentifier(for screen: NSScreen) -> String? {
+        let screenNumberKey = NSDeviceDescriptionKey("NSScreenNumber")
+        guard
+            let screenNumber = screen.deviceDescription[screenNumberKey] as? NSNumber,
+            let displayUUID = CGDisplayCreateUUIDFromDisplayID(screenNumber.uint32Value)?.takeRetainedValue()
+        else {
+            return nil
+        }
+
+        return CFUUIDCreateString(nil, displayUUID) as String
+    }
+
+    private func visibleOrigin(_ origin: NSPoint, on screen: NSScreen) -> NSPoint {
+        let proposedFrame = NSRect(origin: origin, size: panel.frame.size)
+        guard !screen.visibleFrame.intersects(proposedFrame) else {
+            return origin
+        }
+
+        let visibleFrame = screen.visibleFrame
+        let x = min(max(origin.x, visibleFrame.minX + 8), visibleFrame.maxX - panel.frame.width - 8)
+        let y = min(max(origin.y, visibleFrame.minY + 8), visibleFrame.maxY - panel.frame.height - 8)
+        return NSPoint(x: x, y: y)
     }
 
     private func hide() {

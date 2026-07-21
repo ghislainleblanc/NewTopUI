@@ -2,5 +2,3 @@
 --language-mode 6
 --indent 4
 --linebreaks lf
-
-# SwiftUI sibling spacing is enforced by BuildTools/SwiftUIFormattingRules.

@@ -24,8 +24,6 @@ struct ContentView: View {
             MetricCard {
                 NetworkSection(model: model)
             }
-
-            ContentFooter()
         }
         .padding(16)
         .frame(width: 420)
@@ -89,23 +87,6 @@ private struct ContentHeader: View {
             HeaderButton(symbol: "xmark", help: "Hide monitor", action: onClose)
         }
         .contentShape(Rectangle())
-    }
-}
-
-private struct ContentFooter: View {
-    var body: some View {
-        HStack {
-            Image(systemName: "hand.draw")
-
-            Text("Drag anywhere to move")
-
-            Spacer()
-
-            Text("Click the menu bar CPU icon to reopen")
-        }
-        .font(.system(size: 9, weight: .medium, design: .rounded))
-        .foregroundStyle(.tertiary)
-        .padding(.horizontal, 2)
     }
 }
 

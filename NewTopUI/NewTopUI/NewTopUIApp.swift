@@ -104,7 +104,9 @@ final class MonitorPanelController: NSObject {
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem = item
 
-        DispatchQueue.main.async { [weak self, weak button] in
+        // macOS realizes status items in a remote scene. Let its initial layout finish
+        // before reading the button geometry and presenting another window.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak button] in
             guard let self, let button else { return }
             show(relativeTo: button)
         }

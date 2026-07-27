@@ -38,15 +38,27 @@ private final class DraggablePanel: NSPanel {
 }
 
 final class MonitorPanelController: NSObject {
+    private struct PanelPlacement {
+        let screenIdentifier: String
+        let relativeOrigin: NSPoint
+    }
+
     private static let panelOriginDefaultsKey = "monitorPanelOrigin"
     private static let panelScreenDefaultsKey = "monitorPanelScreen"
     private static let panelScreenOriginXDefaultsKey = "monitorPanelScreenOriginX"
     private static let panelScreenOriginYDefaultsKey = "monitorPanelScreenOriginY"
+    private static let wakeRestorationRetryDelay: TimeInterval = 0.5
+    private static let wakeRestorationMaxAttempts = 20
+    private static let wakeRestorationRequiredStableAttempts = 3
 
     private let model = ResourceMonitorModel()
     private let panel: NSPanel
     private var statusItem: NSStatusItem?
     private var hasPositionedPanel = false
+    private var placementBeforeSleep: PanelPlacement?
+    private var isRestoringAfterWake = false
+    private var wakeRestorationStableAttempts = 0
+    private var wakeRestorationWorkItem: DispatchWorkItem?
 
     override init() {
         let panel = DraggablePanel(
@@ -85,10 +97,43 @@ final class MonitorPanelController: NSObject {
             name: NSWindow.didMoveNotification,
             object: panel
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(screenParametersDidChange(_:)),
+            name: NSApplication.didChangeScreenParametersNotification,
+            object: nil
+        )
+
+        let workspaceNotificationCenter = NSWorkspace.shared.notificationCenter
+        workspaceNotificationCenter.addObserver(
+            self,
+            selector: #selector(workspaceWillSleep(_:)),
+            name: NSWorkspace.willSleepNotification,
+            object: nil
+        )
+        workspaceNotificationCenter.addObserver(
+            self,
+            selector: #selector(workspaceWillSleep(_:)),
+            name: NSWorkspace.screensDidSleepNotification,
+            object: nil
+        )
+        workspaceNotificationCenter.addObserver(
+            self,
+            selector: #selector(workspaceDidWake(_:)),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+        workspaceNotificationCenter.addObserver(
+            self,
+            selector: #selector(workspaceDidWake(_:)),
+            name: NSWorkspace.screensDidWakeNotification,
+            object: nil
+        )
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
     }
 
     func installMenuBarItem() {
@@ -113,7 +158,8 @@ final class MonitorPanelController: NSObject {
     }
 
     func stop() {
-        if hasPositionedPanel {
+        wakeRestorationWorkItem?.cancel()
+        if hasPositionedPanel, !isRestoringAfterWake {
             savePanelPlacement()
         }
         model.stop()
@@ -150,20 +196,75 @@ final class MonitorPanelController: NSObject {
     }
 
     @objc private func panelDidMove(_: Notification) {
+        guard !isRestoringAfterWake else {
+            return
+        }
+
         savePanelPlacement()
+    }
+
+    @objc private func workspaceWillSleep(_: Notification) {
+        guard
+            !isRestoringAfterWake,
+            hasPositionedPanel,
+            let placement = currentPanelPlacement()
+        else {
+            return
+        }
+
+        savePanelPlacement()
+        placementBeforeSleep = placement
+        isRestoringAfterWake = true
+        wakeRestorationStableAttempts = 0
+        wakeRestorationWorkItem?.cancel()
+    }
+
+    @objc private func workspaceDidWake(_: Notification) {
+        guard placementBeforeSleep != nil else {
+            isRestoringAfterWake = false
+            return
+        }
+
+        scheduleWakeRestoration(attempt: 0, after: 0.25)
+    }
+
+    @objc private func screenParametersDidChange(_: Notification) {
+        guard
+            isRestoringAfterWake,
+            let placement = placementBeforeSleep
+        else {
+            return
+        }
+
+        wakeRestorationStableAttempts = 0
+        _ = restorePanelPlacementIfPossible(placement)
     }
 
     private func savePanelPlacement() {
         let defaults = UserDefaults.standard
         defaults.set(NSStringFromPoint(panel.frame.origin), forKey: Self.panelOriginDefaultsKey)
 
-        guard let screen = panel.screen, let screenIdentifier = screenIdentifier(for: screen) else {
+        guard let placement = currentPanelPlacement() else {
             return
         }
 
-        defaults.set(screenIdentifier, forKey: Self.panelScreenDefaultsKey)
-        defaults.set(panel.frame.minX - screen.frame.minX, forKey: Self.panelScreenOriginXDefaultsKey)
-        defaults.set(panel.frame.minY - screen.frame.minY, forKey: Self.panelScreenOriginYDefaultsKey)
+        defaults.set(placement.screenIdentifier, forKey: Self.panelScreenDefaultsKey)
+        defaults.set(placement.relativeOrigin.x, forKey: Self.panelScreenOriginXDefaultsKey)
+        defaults.set(placement.relativeOrigin.y, forKey: Self.panelScreenOriginYDefaultsKey)
+    }
+
+    private func currentPanelPlacement() -> PanelPlacement? {
+        guard let screen = panel.screen, let screenIdentifier = screenIdentifier(for: screen) else {
+            return nil
+        }
+
+        return PanelPlacement(
+            screenIdentifier: screenIdentifier,
+            relativeOrigin: NSPoint(
+                x: panel.frame.minX - screen.frame.minX,
+                y: panel.frame.minY - screen.frame.minY
+            )
+        )
     }
 
     private func show(relativeTo button: NSStatusBarButton) {
@@ -193,20 +294,19 @@ final class MonitorPanelController: NSObject {
 
         if let savedScreenIdentifier = defaults.string(forKey: Self.panelScreenDefaultsKey) {
             guard
-                let screen = NSScreen.screens.first(where: {
-                    screenIdentifier(for: $0) == savedScreenIdentifier
-                }),
                 let relativeX = defaults.object(forKey: Self.panelScreenOriginXDefaultsKey) as? NSNumber,
-                let relativeY = defaults.object(forKey: Self.panelScreenOriginYDefaultsKey) as? NSNumber
+                let relativeY = defaults.object(forKey: Self.panelScreenOriginYDefaultsKey) as? NSNumber,
+                let origin = origin(
+                    for: PanelPlacement(
+                        screenIdentifier: savedScreenIdentifier,
+                        relativeOrigin: NSPoint(x: relativeX.doubleValue, y: relativeY.doubleValue)
+                    )
+                )
             else {
                 return nil
             }
 
-            let origin = NSPoint(
-                x: screen.frame.minX + relativeX.doubleValue,
-                y: screen.frame.minY + relativeY.doubleValue
-            )
-            return visibleOrigin(origin, on: screen)
+            return origin
         }
 
         guard let originString = defaults.string(forKey: Self.panelOriginDefaultsKey) else {
@@ -220,6 +320,76 @@ final class MonitorPanelController: NSObject {
         }
 
         return origin
+    }
+
+    private func scheduleWakeRestoration(attempt: Int, after delay: TimeInterval) {
+        wakeRestorationWorkItem?.cancel()
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard
+                let self,
+                self.isRestoringAfterWake,
+                let placement = self.placementBeforeSleep
+            else {
+                return
+            }
+
+            if self.restorePanelPlacementIfPossible(placement) {
+                self.wakeRestorationStableAttempts += 1
+                if self.wakeRestorationStableAttempts >= Self.wakeRestorationRequiredStableAttempts {
+                    self.finishWakeRestoration()
+                } else {
+                    self.scheduleWakeRestoration(
+                        attempt: attempt + 1,
+                        after: Self.wakeRestorationRetryDelay
+                    )
+                }
+            } else if attempt < Self.wakeRestorationMaxAttempts {
+                self.wakeRestorationStableAttempts = 0
+                self.scheduleWakeRestoration(
+                    attempt: attempt + 1,
+                    after: Self.wakeRestorationRetryDelay
+                )
+            } else {
+                self.finishWakeRestoration()
+            }
+        }
+        wakeRestorationWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    private func restorePanelPlacementIfPossible(_ placement: PanelPlacement) -> Bool {
+        guard let origin = origin(for: placement) else {
+            return false
+        }
+
+        panel.setFrameOrigin(origin)
+        hasPositionedPanel = true
+        return true
+    }
+
+    private func finishWakeRestoration() {
+        wakeRestorationWorkItem?.cancel()
+        wakeRestorationWorkItem = nil
+        placementBeforeSleep = nil
+        isRestoringAfterWake = false
+        wakeRestorationStableAttempts = 0
+    }
+
+    private func origin(for placement: PanelPlacement) -> NSPoint? {
+        guard
+            let screen = NSScreen.screens.first(where: {
+                screenIdentifier(for: $0) == placement.screenIdentifier
+            })
+        else {
+            return nil
+        }
+
+        let origin = NSPoint(
+            x: screen.frame.minX + placement.relativeOrigin.x,
+            y: screen.frame.minY + placement.relativeOrigin.y
+        )
+        return visibleOrigin(origin, on: screen)
     }
 
     private func screenIdentifier(for screen: NSScreen) -> String? {

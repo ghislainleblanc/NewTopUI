@@ -140,10 +140,13 @@ final class MonitorPanelController: NSObject {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         guard let button = item.button else { return }
         let iconConfiguration = NSImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        button.image = NSImage(systemSymbolName: "cpu", accessibilityDescription: "System Pulse")?
+        button.image = NSImage(
+            systemSymbolName: "cpu",
+            accessibilityDescription: String(localized: "System Pulse", comment: "App name")
+        )?
             .withSymbolConfiguration(iconConfiguration)
         button.image?.isTemplate = true
-        button.toolTip = "System Pulse"
+        button.toolTip = String(localized: "System Pulse", comment: "App name")
         button.target = self
         button.action = #selector(statusItemClicked(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -184,7 +187,8 @@ final class MonitorPanelController: NSObject {
     }
 
     @objc private func showAbout() {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? String(localized: "Unknown", comment: "Fallback when the app version cannot be read")
         NSApplication.shared.activate()
         NSApplication.shared.orderFrontStandardAboutPanel(
             options: [.applicationVersion: version]
@@ -423,15 +427,32 @@ final class MonitorPanelController: NSObject {
 
     private func showContextMenu(relativeTo button: NSStatusBarButton) {
         let menu = NSMenu()
-        let aboutItem = NSMenuItem(title: "About System Pulse", action: #selector(showAbout), keyEquivalent: "")
+        let aboutItem = NSMenuItem(
+            title: String(localized: "About System Pulse", comment: "Menu item that opens the About panel"),
+            action: #selector(showAbout),
+            keyEquivalent: ""
+        )
         aboutItem.target = self
         menu.addItem(aboutItem)
         menu.addItem(.separator())
-        let showItem = NSMenuItem(title: panel.isVisible ? "Hide System Pulse" : "Show System Pulse", action: #selector(toggleFromMenu), keyEquivalent: "")
+        let visibilityTitle = if panel.isVisible {
+            String(localized: "Hide System Pulse", comment: "Menu item that hides the monitor")
+        } else {
+            String(localized: "Show System Pulse", comment: "Menu item that shows the monitor")
+        }
+        let showItem = NSMenuItem(
+            title: visibilityTitle,
+            action: #selector(toggleFromMenu),
+            keyEquivalent: ""
+        )
         showItem.target = self
         menu.addItem(showItem)
         menu.addItem(.separator())
-        let quitItem = NSMenuItem(title: "Quit System Pulse", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(
+            title: String(localized: "Quit System Pulse", comment: "Menu item that quits the app"),
+            action: #selector(quit),
+            keyEquivalent: "q"
+        )
         quitItem.target = self
         menu.addItem(quitItem)
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.minY - 4), in: button)

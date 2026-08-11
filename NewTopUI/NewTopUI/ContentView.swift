@@ -82,9 +82,17 @@ private struct ContentHeader: View {
 
             Spacer()
 
-            HeaderButton(symbol: "power", help: "Quit System Pulse", action: onQuit)
+            HeaderButton(
+                symbol: "power",
+                help: String(localized: "Quit System Pulse", comment: "Tooltip for the button that quits the app"),
+                action: onQuit
+            )
 
-            HeaderButton(symbol: "xmark", help: "Hide monitor", action: onClose)
+            HeaderButton(
+                symbol: "xmark",
+                help: String(localized: "Hide monitor", comment: "Tooltip for the button that hides the monitor panel"),
+                action: onClose
+            )
         }
         .contentShape(Rectangle())
     }
@@ -151,7 +159,7 @@ private struct CPUSection: View {
     var body: some View {
         VStack(spacing: 9) {
             SectionTitle(
-                title: "CPU · \(model.cores.count) cores",
+                title: coreCountTitle,
                 symbol: "cpu",
                 color: .cyan,
                 value: model.averageCPUFraction.formatted(.percent.precision(.fractionLength(0)))
@@ -159,6 +167,15 @@ private struct CPUSection: View {
 
             CoreBarGraph(cores: model.cores)
         }
+    }
+
+    private var coreCountTitle: String {
+        let format = if model.cores.count == 1 {
+            String(localized: "CPU · %lld core", comment: "CPU heading for a computer with one core")
+        } else {
+            String(localized: "CPU · %lld cores", comment: "CPU heading followed by the number of processor cores")
+        }
+        return String(format: format, locale: .current, Int64(model.cores.count))
     }
 }
 
@@ -205,7 +222,7 @@ private struct CoreBarGraph: View {
                             .frame(height: barHeight)
                         }
                         .frame(width: barWidth, height: 54)
-                        .help("Core \(core.id + 1): \(core.fraction.formatted(.percent.precision(.fractionLength(0))))")
+                        .help(coreHelp(core))
 
                         Text("\(core.id + 1)")
                             .font(.system(size: cores.count > 16 ? 6.5 : 7.5, weight: .medium, design: .rounded))
@@ -217,6 +234,19 @@ private struct CoreBarGraph: View {
         }
         .frame(height: 68)
     }
+
+    private func coreHelp(_ core: CoreUsage) -> String {
+        let format = String(
+            localized: "Core %lld: %@",
+            comment: "Tooltip for a processor core followed by its number and usage percentage"
+        )
+        return String(
+            format: format,
+            locale: .current,
+            Int64(core.id + 1),
+            core.fraction.formatted(.percent.precision(.fractionLength(0)))
+        )
+    }
 }
 
 private struct GPUSection: View {
@@ -225,10 +255,11 @@ private struct GPUSection: View {
     var body: some View {
         VStack(spacing: 10) {
             SectionTitle(
-                title: "GPU",
+                title: String(localized: "GPU", comment: "Graphics processor section heading"),
                 symbol: "square.3.layers.3d",
                 color: .pink,
-                value: model.gpuFraction?.formatted(.percent.precision(.fractionLength(0))) ?? "N/A"
+                value: model.gpuFraction?.formatted(.percent.precision(.fractionLength(0)))
+                    ?? String(localized: "N/A", comment: "Abbreviation shown when a metric is unavailable")
             )
 
             MiniBarHistory(values: model.gpuHistory, color: .pink)
@@ -244,7 +275,7 @@ private struct MemorySection: View {
     var body: some View {
         VStack(spacing: 10) {
             SectionTitle(
-                title: "Memory",
+                title: String(localized: "Memory", comment: "Memory section heading"),
                 symbol: "memorychip",
                 color: .orange,
                 value: memory.fraction.formatted(.percent.precision(.fractionLength(0)))
@@ -263,7 +294,7 @@ private struct MemorySection: View {
                 .frame(height: 9)
 
                 HStack(spacing: 5) {
-                    Text("\(ByteFormatting.compact(memory.usedBytes)) of \(ByteFormatting.compact(memory.totalBytes))")
+                    Text(memoryUsageSummary)
 
                     Spacer(minLength: 0)
 
@@ -278,6 +309,19 @@ private struct MemorySection: View {
             .frame(height: 48, alignment: .bottom)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private var memoryUsageSummary: String {
+        let format = String(
+            localized: "%1$@ of %2$@",
+            comment: "Memory usage: the first value is used memory and the second is total memory"
+        )
+        return String(
+            format: format,
+            locale: .current,
+            ByteFormatting.compact(memory.usedBytes),
+            ByteFormatting.compact(memory.totalBytes)
+        )
     }
 }
 
@@ -312,8 +356,16 @@ private struct MemoryCard: View {
             .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
-        .help(isShowingDetails ? "Click to show memory summary" : "Click for a detailed memory breakdown")
-        .accessibilityHint(isShowingDetails ? "Shows the memory summary" : "Shows memory categories")
+        .help(
+            isShowingDetails
+                ? String(localized: "Click to show memory summary", comment: "Tooltip for the memory details card")
+                : String(localized: "Click for a detailed memory breakdown", comment: "Tooltip for the memory summary card")
+        )
+        .accessibilityHint(
+            isShowingDetails
+                ? String(localized: "Shows the memory summary", comment: "Accessibility hint for the memory details card")
+                : String(localized: "Shows memory categories", comment: "Accessibility hint for the memory summary card")
+        )
     }
 }
 
@@ -323,7 +375,7 @@ private struct MemoryBreakdownSection: View {
     var body: some View {
         VStack(spacing: 5) {
             SectionTitle(
-                title: "Memory details",
+                title: String(localized: "Memory details", comment: "Detailed memory section heading"),
                 symbol: "arrow.uturn.backward.circle",
                 color: .orange,
                 value: ByteFormatting.compact(memory.totalBytes)
@@ -331,43 +383,58 @@ private struct MemoryBreakdownSection: View {
 
             VStack(spacing: 1) {
                 MemoryBreakdownRow(
-                    title: "App",
+                    title: String(localized: "App", comment: "Memory used by apps category"),
                     color: .orange,
                     bytes: memory.applicationBytes,
                     totalBytes: memory.totalBytes,
-                    help: "Anonymous, non-purgeable memory used by apps and system processes"
+                    help: String(
+                        localized: "Anonymous, non-purgeable memory used by apps and system processes",
+                        comment: "Tooltip explaining the app memory category"
+                    )
                 )
 
                 MemoryBreakdownRow(
-                    title: "Wired",
+                    title: String(localized: "Wired", comment: "Wired memory category"),
                     color: .pink,
                     bytes: memory.wiredBytes,
                     totalBytes: memory.totalBytes,
-                    help: "Memory that must remain in physical RAM"
+                    help: String(
+                        localized: "Memory that must remain in physical RAM",
+                        comment: "Tooltip explaining the wired memory category"
+                    )
                 )
 
                 MemoryBreakdownRow(
-                    title: "Compressed",
+                    title: String(localized: "Compressed", comment: "Compressed memory category"),
                     color: .purple,
                     bytes: memory.compressedBytes,
                     totalBytes: memory.totalBytes,
-                    help: "Physical RAM occupied by compressed memory"
+                    help: String(
+                        localized: "Physical RAM occupied by compressed memory",
+                        comment: "Tooltip explaining the compressed memory category"
+                    )
                 )
 
                 MemoryBreakdownRow(
-                    title: "Cached",
+                    title: String(localized: "Cached", comment: "Cached memory category"),
                     color: .cyan,
                     bytes: memory.cachedBytes,
                     totalBytes: memory.totalBytes,
-                    help: "File-backed and purgeable memory that macOS can quickly reuse"
+                    help: String(
+                        localized: "File-backed and purgeable memory that macOS can quickly reuse",
+                        comment: "Tooltip explaining the cached memory category"
+                    )
                 )
 
                 MemoryBreakdownRow(
-                    title: "Available",
+                    title: String(localized: "Available", comment: "Available memory category"),
                     color: .green,
                     bytes: memory.availableBytes,
                     totalBytes: memory.totalBytes,
-                    help: "Physical RAM not currently assigned to another category"
+                    help: String(
+                        localized: "Physical RAM not currently assigned to another category",
+                        comment: "Tooltip explaining the available memory category"
+                    )
                 )
             }
         }
@@ -446,9 +513,19 @@ private struct NetworkSection: View {
 
                 Spacer()
 
-                NetworkSpeed(label: "DOWN", symbol: "arrow.down", color: .green, bytes: model.receivedBytesPerSecond)
+                NetworkSpeed(
+                    label: String(localized: "DOWN", comment: "Abbreviated network download label"),
+                    symbol: "arrow.down",
+                    color: .green,
+                    bytes: model.receivedBytesPerSecond
+                )
 
-                NetworkSpeed(label: "UP", symbol: "arrow.up", color: .blue, bytes: model.sentBytesPerSecond)
+                NetworkSpeed(
+                    label: String(localized: "UP", comment: "Abbreviated network upload label"),
+                    symbol: "arrow.up",
+                    color: .blue,
+                    bytes: model.sentBytesPerSecond
+                )
             }
             .font(.system(size: 10, weight: .bold, design: .rounded))
 

@@ -53,13 +53,13 @@ private struct ContentHeader: View {
     let onQuit: () -> Void
     let onClose: () -> Void
 
-    let options = [
+    static let options = [
         RefreshOption(title: "LIVE · 1 SEC", duration: 1),
         RefreshOption(title: "LIVE · 3 SEC", duration: 3),
         RefreshOption(title: "LIVE · 4 SEC", duration: 5)
     ]
 
-    @State private var selectedOptionIndex = 0
+    @State private var selectedOption = Self.options.first!
 
     var body: some View {
         HStack(spacing: 10) {
@@ -82,8 +82,8 @@ private struct ContentHeader: View {
                         .fill(.green)
                         .frame(width: 5, height: 5)
 
-                    Picker("", selection: $selectedOptionIndex) {
-                        ForEach(options, id: \.self) { option in
+                    Picker("", selection: $selectedOption) {
+                        ForEach(Self.options, id: \.self) { option in
                             Text(option.title)
                                 .font(.system(size: 9, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.secondary)

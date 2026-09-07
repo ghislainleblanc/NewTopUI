@@ -53,6 +53,14 @@ private struct ContentHeader: View {
     let onQuit: () -> Void
     let onClose: () -> Void
 
+    let options = [
+        RefreshOption(title: "LIVE · 1 SEC", duration: 1),
+        RefreshOption(title: "LIVE · 3 SEC", duration: 3),
+        RefreshOption(title: "LIVE · 4 SEC", duration: 5)
+    ]
+
+    @State private var selectedOptionIndex = 0
+
     var body: some View {
         HStack(spacing: 10) {
             ZStack {
@@ -74,9 +82,14 @@ private struct ContentHeader: View {
                         .fill(.green)
                         .frame(width: 5, height: 5)
 
-                    Text("LIVE · 1 SEC")
-                        .font(.system(size: 9, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.secondary)
+                    Picker("", selection: $selectedOptionIndex) {
+                        ForEach(options, id: \.self) { option in
+                            Text(option.title)
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .pickerStyle(.menu) // Forces the dropdown look on macOS
                 }
             }
 

@@ -1,6 +1,11 @@
 import Foundation
 import Observation
 
+struct RefreshOption: Hashable {
+    let title: String
+    let duration: TimeInterval
+}
+
 struct CoreUsage: Identifiable, Equatable {
     let id: Int
     let fraction: Double

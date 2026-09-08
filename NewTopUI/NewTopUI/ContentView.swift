@@ -57,9 +57,9 @@ private struct ContentHeader: View {
     let onRefreshIntervalChange: (TimeInterval) -> Void
 
     static let options = [
-        RefreshOption(title: String(localized:"LIVE · 1 SEC", comment: "1 second duration"), refreshInterval: 1),
-        RefreshOption(title: String(localized:"LIVE · 3 SEC", comment: "3 second duration"), refreshInterval: 3),
-        RefreshOption(title: String(localized:"LIVE · 5 SEC", comment: "5 second duration"), refreshInterval: 5)
+        RefreshOption(title: String(localized: "LIVE · 1 SEC", comment: "1 second duration"), refreshInterval: 1),
+        RefreshOption(title: String(localized: "LIVE · 3 SEC", comment: "3 second duration"), refreshInterval: 3),
+        RefreshOption(title: String(localized: "LIVE · 5 SEC", comment: "5 second duration"), refreshInterval: 5),
     ]
 
     @State private var selectedOption = Self.options.first!
@@ -79,8 +79,9 @@ private struct ContentHeader: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("System Pulse")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .padding(.bottom, 2)
 
-                HStack(spacing: 5) {
+                HStack(spacing: 0) {
                     Circle()
                         .fill(.green)
                         .frame(width: 5, height: 5)
@@ -92,7 +93,7 @@ private struct ContentHeader: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .pickerStyle(.menu) // Forces the dropdown look on macOS
+                    .pickerStyle(.menu)
                 }
             }
 

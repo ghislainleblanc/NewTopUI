@@ -332,30 +332,30 @@ final class MonitorPanelController: NSObject {
         let workItem = DispatchWorkItem { [weak self] in
             guard
                 let self,
-                self.isRestoringAfterWake,
-                let placement = self.placementBeforeSleep
+                isRestoringAfterWake,
+                let placement = placementBeforeSleep
             else {
                 return
             }
 
-            if self.restorePanelPlacementIfPossible(placement) {
-                self.wakeRestorationStableAttempts += 1
-                if self.wakeRestorationStableAttempts >= Self.wakeRestorationRequiredStableAttempts {
-                    self.finishWakeRestoration()
+            if restorePanelPlacementIfPossible(placement) {
+                wakeRestorationStableAttempts += 1
+                if wakeRestorationStableAttempts >= Self.wakeRestorationRequiredStableAttempts {
+                    finishWakeRestoration()
                 } else {
-                    self.scheduleWakeRestoration(
+                    scheduleWakeRestoration(
                         attempt: attempt + 1,
                         after: Self.wakeRestorationRetryDelay
                     )
                 }
             } else if attempt < Self.wakeRestorationMaxAttempts {
-                self.wakeRestorationStableAttempts = 0
-                self.scheduleWakeRestoration(
+                wakeRestorationStableAttempts = 0
+                scheduleWakeRestoration(
                     attempt: attempt + 1,
                     after: Self.wakeRestorationRetryDelay
                 )
             } else {
-                self.finishWakeRestoration()
+                finishWakeRestoration()
             }
         }
         wakeRestorationWorkItem = workItem

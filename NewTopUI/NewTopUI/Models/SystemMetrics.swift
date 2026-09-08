@@ -54,7 +54,12 @@ final class ResourceMonitorModel {
     var networkHistory: [NetworkPoint]
     var memory: MemoryUsage
     var isRunning = false
-    var refreshInterval: TimeInterval = 0.5
+    var refreshInterval: TimeInterval = 1 {
+        didSet {
+            stop()
+            start()
+        }
+    }
 
     var averageCPUFraction: Double {
         guard !cores.isEmpty else { return 0 }
@@ -86,7 +91,7 @@ final class ResourceMonitorModel {
         guard !isRunning else { return }
         isRunning = true
         refresh()
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.refresh()
             }

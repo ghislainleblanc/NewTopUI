@@ -54,12 +54,12 @@ struct ContentView: View {
 private struct ContentHeader: View {
     let onQuit: () -> Void
     let onClose: () -> Void
-    let onSelectRefresh: (TimeInterval) -> Void
+    let onRefreshIntervalChange: (TimeInterval) -> Void
 
     static let options = [
-        RefreshOption(title: String(localized:"LIVE · 1 SEC", comment: "1 second duration"), duration: 1),
-        RefreshOption(title: String(localized:"LIVE · 3 SEC", comment: "3 second duration"), duration: 3),
-        RefreshOption(title: String(localized:"LIVE · 5 SEC", comment: "5 second duration"), duration: 5)
+        RefreshOption(title: String(localized:"LIVE · 1 SEC", comment: "1 second duration"), refreshInterval: 1),
+        RefreshOption(title: String(localized:"LIVE · 3 SEC", comment: "3 second duration"), refreshInterval: 3),
+        RefreshOption(title: String(localized:"LIVE · 5 SEC", comment: "5 second duration"), refreshInterval: 5)
     ]
 
     @State private var selectedOption = Self.options.first!
@@ -111,15 +111,15 @@ private struct ContentHeader: View {
             )
         }
         .contentShape(Rectangle())
-        .onChange(of: selectedOption.duration) { _, newValue in
-            onSelectRefresh(newValue)
+        .onChange(of: selectedOption.refreshInterval) { _, newValue in
+            onRefreshIntervalChange(newValue)
         }
     }
 }
 
 private struct RefreshOption: Hashable, Equatable {
     let title: String
-    var duration: TimeInterval
+    var refreshInterval: TimeInterval
 }
 
 private struct HeaderButton: View {

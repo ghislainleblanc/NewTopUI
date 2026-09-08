@@ -1,11 +1,6 @@
 import Foundation
 import Observation
 
-struct RefreshOption: Hashable {
-    let title: String
-    let duration: TimeInterval
-}
-
 struct CoreUsage: Identifiable, Equatable {
     let id: Int
     let fraction: Double
@@ -59,6 +54,7 @@ final class ResourceMonitorModel {
     var networkHistory: [NetworkPoint]
     var memory: MemoryUsage
     var isRunning = false
+    var refreshInterval: TimeInterval = 0.5
 
     var averageCPUFraction: Double {
         guard !cores.isEmpty else { return 0 }

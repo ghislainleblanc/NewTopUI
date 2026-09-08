@@ -298,7 +298,7 @@
       }
     },
     "LIVE · 1 SEC" : {
-      "extractionState" : "stale",
+      "comment" : "1 second duration",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -313,6 +313,12 @@
           }
         }
       }
+    },
+    "LIVE · 3 SEC" : {
+      "comment" : "3 second duration"
+    },
+    "LIVE · 5 SEC" : {
+      "comment" : "5 second duration"
     },
     "Memory" : {
       "comment" : "Memory section heading",

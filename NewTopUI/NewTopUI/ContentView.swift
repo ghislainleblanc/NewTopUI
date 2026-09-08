@@ -7,7 +7,9 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            ContentHeader(onQuit: onQuit, onClose: onClose)
+            ContentHeader(onQuit: onQuit, onClose: onClose) { newRefreshInterval in
+                model.refreshInterval = newRefreshInterval
+            }
 
             MetricCard {
                 CPUSection(model: model)
@@ -52,11 +54,12 @@ struct ContentView: View {
 private struct ContentHeader: View {
     let onQuit: () -> Void
     let onClose: () -> Void
+    let onSelectRefresh: (TimeInterval) -> Void
 
     static let options = [
-        RefreshOption(title: "LIVE · 1 SEC", duration: 1),
-        RefreshOption(title: "LIVE · 3 SEC", duration: 3),
-        RefreshOption(title: "LIVE · 4 SEC", duration: 5)
+        RefreshOption(title: String(localized:"LIVE · 1 SEC", comment: "1 second duration"), duration: 1),
+        RefreshOption(title: String(localized:"LIVE · 3 SEC", comment: "3 second duration"), duration: 3),
+        RefreshOption(title: String(localized:"LIVE · 5 SEC", comment: "5 second duration"), duration: 5)
     ]
 
     @State private var selectedOption = Self.options.first!
@@ -108,7 +111,15 @@ private struct ContentHeader: View {
             )
         }
         .contentShape(Rectangle())
+        .onChange(of: selectedOption.duration) { _, newValue in
+            onSelectRefresh(newValue)
+        }
     }
+}
+
+private struct RefreshOption: Hashable, Equatable {
+    let title: String
+    var duration: TimeInterval
 }
 
 private struct HeaderButton: View {

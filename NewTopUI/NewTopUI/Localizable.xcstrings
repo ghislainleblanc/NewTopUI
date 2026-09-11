@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-      "shouldTranslate" : false
-    },
     "%1$@ of %2$@" : {
       "comment" : "Memory usage: the first value is used memory and the second is total memory",
       "localizations" : {
@@ -317,13 +314,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "EN VIVO · 1 S"
+            "value" : "EN VIVO · 1 SEC"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "EN DIRECT · 1 S"
+            "value" : "EN DIRECT · 1 SEC"
           }
         }
       }
@@ -334,7 +331,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "EN VIVO · 3 S"
+            "value" : "EN VIVO · 3 SEC"
           }
         },
         "fr" : {
@@ -351,7 +348,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "EN VIVO · 5 S"
+            "value" : "EN VIVO · 5 SEC"
           }
         },
         "fr" : {

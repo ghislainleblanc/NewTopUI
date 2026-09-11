@@ -81,19 +81,32 @@ private struct ContentHeader: View {
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .padding(.bottom, 2)
 
-                HStack(spacing: 0) {
+                HStack(spacing: 4) {
                     Circle()
                         .fill(.green)
                         .frame(width: 5, height: 5)
 
-                    Picker("", selection: $selectedOption) {
+                    Menu {
                         ForEach(Self.options, id: \.self) { option in
-                            Text(option.title)
-                                .font(.system(size: 9, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.secondary)
+                            Button {
+                                selectedOption = option
+                            } label: {
+                                HStack(alignment: .top) {
+                                    Text(option.title)
+                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+
+                                    Spacer()
+
+                                    if selectedOption == option {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
                         }
+                    } label: {
+                        Text(selectedOption.title)
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
                     }
-                    .pickerStyle(.menu)
                 }
             }
 

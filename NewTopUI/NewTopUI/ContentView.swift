@@ -48,6 +48,9 @@ struct ContentView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .gesture(WindowDragGesture())
+        .allowsWindowActivationEvents(true)
     }
 }
 

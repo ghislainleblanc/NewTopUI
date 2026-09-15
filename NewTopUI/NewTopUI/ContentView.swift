@@ -15,6 +15,10 @@ struct ContentView: View {
                 CPUSection(model: model)
             }
 
+            MetricCard {
+                TopCPUUsersSection(users: model.topCPUUsers)
+            }
+
             HStack(alignment: .top, spacing: 10) {
                 MetricCard {
                     GPUSection(model: model)
@@ -217,6 +221,110 @@ private struct CPUSection: View {
             String(localized: "CPU · %lld cores", comment: "CPU heading followed by the number of processor cores")
         }
         return String(format: format, locale: .current, Int64(model.cores.count))
+    }
+}
+
+private struct TopCPUUsersSection: View {
+    let users: [ProcessCPUUsage]
+
+    @State private var isShowingUsers = true
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isShowingUsers.toggle()
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "person.2.fill")
+                        .foregroundStyle(.cyan)
+
+                    Text(String(localized: "TOP CPU USERS", comment: "Heading for the processes using the most CPU"))
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Image(systemName: isShowingUsers ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(.tertiary)
+                }
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+            }
+            .buttonStyle(.plain)
+            .help(
+                isShowingUsers
+                    ? String(localized: "Hide top CPU users", comment: "Tooltip for collapsing the top CPU users list")
+                    : String(localized: "Show top CPU users", comment: "Tooltip for expanding the top CPU users list")
+            )
+            .accessibilityLabel(
+                isShowingUsers
+                    ? String(localized: "Hide top CPU users", comment: "Accessibility label for collapsing the top CPU users list")
+                    : String(localized: "Show top CPU users", comment: "Accessibility label for expanding the top CPU users list")
+            )
+
+            if isShowingUsers {
+                if users.isEmpty {
+                    Text(String(localized: "Waiting for process data…", comment: "Message shown before process CPU data is available"))
+                        .font(.system(size: 9, weight: .medium, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    VStack(spacing: 5) {
+                        ForEach(users) { user in
+                            ProcessCPUUserRow(user: user)
+                        }
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+        }
+    }
+}
+
+private struct ProcessCPUUserRow: View {
+    let user: ProcessCPUUsage
+
+    var body: some View {
+        HStack(spacing: 7) {
+            Image(nsImage: user.icon)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 20, height: 20)
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+            Text(user.name)
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            GeometryReader { proxy in
+                Capsule()
+                    .fill(Color.primary.opacity(0.07))
+                    .overlay(alignment: .leading) {
+                        Capsule()
+                            .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: max(3, proxy.size.width * user.fraction))
+                    }
+            }
+            .frame(width: 76, height: 7)
+
+            Text(user.fraction.formatted(.percent.precision(.fractionLength(0))))
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .frame(width: 34, alignment: .trailing)
+        }
+        .help(
+            String(
+                format: String(
+                    localized: "%1$@: %2$@ CPU",
+                    comment: "Tooltip showing an app name and its CPU usage"
+                ),
+                locale: .current,
+                user.name,
+                user.fraction.formatted(.percent.precision(.fractionLength(0)))
+            )
+        )
     }
 }
 

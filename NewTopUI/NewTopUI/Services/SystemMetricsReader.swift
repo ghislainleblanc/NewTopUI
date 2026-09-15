@@ -1,3 +1,4 @@
+import AppKit
 import Darwin
 import Foundation
 import IOKit
@@ -6,24 +7,34 @@ final class SystemMetricsReader {
     private var previousCPUTicks: [[UInt64]]?
     private var previousNetworkBytes: (received: UInt64, sent: UInt64)?
     private var previousNetworkTime: TimeInterval?
+    private var previousProcessCPU: [pid_t: UInt64] = [:]
+    private var previousProcessParents: [pid_t: pid_t] = [:]
+    private var previousProcessTime: TimeInterval?
 
     func primeCounters() {
         previousCPUTicks = currentCPUTicks()
         previousNetworkBytes = currentNetworkBytes()
-        previousNetworkTime = ProcessInfo.processInfo.systemUptime
+        let now = ProcessInfo.processInfo.systemUptime
+        previousNetworkTime = now
+        let processSnapshot = currentProcessSnapshot()
+        previousProcessCPU = processSnapshot.cpu
+        previousProcessParents = processSnapshot.parents
+        previousProcessTime = now
     }
 
     func sample() -> SystemMetricsSample {
         let cores = sampleCPU()
         let gpuFraction = sampleGPU()
         let network = sampleNetwork()
+        let topCPUUsers = sampleTopCPUUsers()
 
         return SystemMetricsSample(
             cores: cores,
             gpuFraction: gpuFraction,
             receivedBytesPerSecond: network.received,
             sentBytesPerSecond: network.sent,
-            memory: sampleMemory()
+            memory: sampleMemory(),
+            topCPUUsers: topCPUUsers
         )
     }
 
@@ -113,6 +124,157 @@ final class SystemMetricsReader {
         }
 
         return readings.max()
+    }
+
+    private func currentProcessSnapshot() -> (cpu: [pid_t: UInt64], parents: [pid_t: pid_t]) {
+        let ownProcessID = ProcessInfo.processInfo.processIdentifier
+        let applications = NSWorkspace.shared.runningApplications.filter {
+            $0.processIdentifier > 0
+                && $0.processIdentifier != ownProcessID
+                && $0.activationPolicy == .regular
+        }
+
+        var queue: [(pid: pid_t, parent: pid_t?)] = applications.map {
+            (pid: $0.processIdentifier, parent: nil)
+        }
+        var visited = Set<pid_t>()
+        var cpu: [pid_t: UInt64] = [:]
+        var parents: [pid_t: pid_t] = [:]
+
+        while let entry = queue.first {
+            queue.removeFirst()
+            guard visited.insert(entry.pid).inserted else { continue }
+
+            var taskInfo = proc_taskinfo()
+            let taskInfoSize = Int32(MemoryLayout<proc_taskinfo>.stride)
+            if proc_pidinfo(entry.pid, PROC_PIDTASKINFO, 0, &taskInfo, taskInfoSize) == taskInfoSize {
+                cpu[entry.pid] = taskInfo.pti_total_user &+ taskInfo.pti_total_system
+            }
+            if let parent = entry.parent {
+                parents[entry.pid] = parent
+            }
+
+            let bufferSize = proc_listchildpids(entry.pid, nil, 0)
+            guard bufferSize > 0 else { continue }
+
+            let pidCount = Int(bufferSize) / MemoryLayout<pid_t>.stride
+            var childPIDs = [pid_t](repeating: 0, count: pidCount)
+            let actualSize = childPIDs.withUnsafeMutableBytes { buffer in
+                proc_listchildpids(entry.pid, buffer.baseAddress, Int32(buffer.count))
+            }
+            guard actualSize > 0 else { continue }
+
+            let actualPIDCount = Int(actualSize) / MemoryLayout<pid_t>.stride
+            queue.append(contentsOf: childPIDs.prefix(actualPIDCount).map {
+                (pid: $0, parent: entry.pid)
+            })
+        }
+
+        return (cpu, parents)
+    }
+
+    private func descendantPIDs(
+        for pid: pid_t,
+        parents: [pid_t: pid_t]
+    ) -> Set<pid_t> {
+        var included = Set([pid])
+        var changed = true
+
+        while changed {
+            changed = false
+            for (candidate, parent) in parents where parent == pid || included.contains(parent) {
+                guard included.insert(candidate).inserted else { continue }
+                changed = true
+            }
+        }
+
+        return included
+    }
+
+    private func aggregateCPUChange(
+        for pid: pid_t,
+        currentCPU: [pid_t: UInt64],
+        currentParents: [pid_t: pid_t],
+        previousCPU: [pid_t: UInt64],
+        previousParents: [pid_t: pid_t]
+    ) -> UInt64 {
+        let processIDs = descendantPIDs(for: pid, parents: currentParents)
+            .union(descendantPIDs(for: pid, parents: previousParents))
+
+        return processIDs.reduce(0) { total, processID in
+            guard
+                let current = currentCPU[processID],
+                let previous = previousCPU[processID],
+                current >= previous
+            else {
+                return total
+            }
+            return total &+ (current - previous)
+        }
+    }
+
+    private func sampleTopCPUUsers() -> [ProcessCPUUsage] {
+        let applications = NSWorkspace.shared.runningApplications.filter { application in
+            application.processIdentifier > 0
+                && application.processIdentifier != ProcessInfo.processInfo.processIdentifier
+                && application.activationPolicy == .regular
+                && application.icon != nil
+                && application.localizedName != nil
+        }
+        let processSnapshot = currentProcessSnapshot()
+        let now = ProcessInfo.processInfo.systemUptime
+        defer {
+            previousProcessCPU = processSnapshot.cpu
+            previousProcessParents = processSnapshot.parents
+            previousProcessTime = now
+        }
+
+        guard let previousProcessTime else {
+            return applications.compactMap { application in
+                guard let icon = application.icon, let name = application.localizedName else { return nil }
+                return ProcessCPUUsage(
+                    id: application.processIdentifier,
+                    name: name,
+                    icon: icon,
+                    fraction: 0
+                )
+            }
+            .prefix(5)
+            .map { $0 }
+        }
+        let elapsed = max(now - previousProcessTime, 0.001)
+
+        return applications.compactMap { application in
+            let cpuTicks = aggregateCPUChange(
+                for: application.processIdentifier,
+                currentCPU: processSnapshot.cpu,
+                currentParents: processSnapshot.parents,
+                previousCPU: previousProcessCPU,
+                previousParents: previousProcessParents
+            )
+            guard
+                let icon = application.icon,
+                let name = application.localizedName
+            else { return nil }
+
+            let cpuNanoseconds = machTicksToNanoseconds(cpuTicks)
+            let cpuFraction = cpuNanoseconds / 1_000_000_000 / elapsed
+            return ProcessCPUUsage(
+                id: application.processIdentifier,
+                name: name,
+                icon: icon,
+                fraction: min(max(cpuFraction, 0), 1)
+            )
+        }
+        .sorted { $0.fraction > $1.fraction }
+        .prefix(5)
+        .map { $0 }
+    }
+
+    private func machTicksToNanoseconds(_ ticks: UInt64) -> Double {
+        var timebase = mach_timebase_info_data_t()
+        mach_timebase_info(&timebase)
+        return Double(ticks) * Double(timebase.numer) / Double(timebase.denom)
     }
 
     private func currentNetworkBytes() -> (received: UInt64, sent: UInt64) {

@@ -1,8 +1,16 @@
+import AppKit
 import Foundation
 import Observation
 
 struct CoreUsage: Identifiable, Equatable {
     let id: Int
+    let fraction: Double
+}
+
+struct ProcessCPUUsage: Identifiable {
+    let id: pid_t
+    let name: String
+    let icon: NSImage
     let fraction: Double
 }
 
@@ -40,6 +48,7 @@ struct SystemMetricsSample {
     let receivedBytesPerSecond: Double
     let sentBytesPerSecond: Double
     let memory: MemoryUsage
+    let topCPUUsers: [ProcessCPUUsage]
 }
 
 @Observable
@@ -53,6 +62,7 @@ final class ResourceMonitorModel {
     var gpuHistory: [Double]
     var networkHistory: [NetworkPoint]
     var memory: MemoryUsage
+    var topCPUUsers: [ProcessCPUUsage]
     var isRunning = false
     var refreshInterval: TimeInterval = 1 {
         didSet {
@@ -83,6 +93,7 @@ final class ResourceMonitorModel {
             NetworkPoint(id: $0, receivedBytesPerSecond: 0, sentBytesPerSecond: 0)
         }
         memory = MemoryUsage()
+        topCPUUsers = []
         reader.primeCounters()
         refresh()
     }
@@ -128,5 +139,6 @@ final class ResourceMonitorModel {
         }
 
         memory = sample.memory
+        topCPUUsers = sample.topCPUUsers
     }
 }

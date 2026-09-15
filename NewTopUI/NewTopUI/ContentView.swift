@@ -299,13 +299,29 @@ private struct ProcessCPUUserRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             GeometryReader { proxy in
-                Capsule()
-                    .fill(Color.primary.opacity(0.07))
-                    .overlay(alignment: .leading) {
-                        Capsule()
-                            .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(3, proxy.size.width * user.fraction))
-                    }
+                UnevenRoundedRectangle(
+                    cornerRadii: RectangleCornerRadii(
+                        topLeading: 0,
+                        bottomLeading: 0,
+                        bottomTrailing: 3,
+                        topTrailing: 3
+                    ),
+                    style: .continuous
+                )
+                .fill(Color.primary.opacity(0.07))
+                .overlay(alignment: .leading) {
+                    UnevenRoundedRectangle(
+                        cornerRadii: RectangleCornerRadii(
+                            topLeading: 0,
+                            bottomLeading: 0,
+                            bottomTrailing: 3,
+                            topTrailing: 3
+                        ),
+                        style: .continuous
+                    )
+                    .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(3, proxy.size.width * user.fraction))
+                }
             }
             .frame(width: 76, height: 7)
 

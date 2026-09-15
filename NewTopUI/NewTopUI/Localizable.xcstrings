@@ -19,7 +19,21 @@
       }
     },
     "%1$@: %2$@ CPU" : {
-      "comment" : "Tooltip showing an app name and its CPU usage"
+      "comment" : "Tooltip showing an app name and its CPU usage",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%1$@: %2$@ de CPU"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%1$@ : %2$@ CPU"
+          }
+        }
+      }
     },
     "%lld" : {
       "comment" : "A label displaying the identifier of a CPU core. The argument is the core's identifier.",
@@ -312,7 +326,21 @@
       }
     },
     "Hide top CPU users" : {
-      "comment" : "Accessibility label for collapsing the top CPU users list\nTooltip for collapsing the top CPU users list"
+      "comment" : "Accessibility label for collapsing the top CPU users list\nTooltip for collapsing the top CPU users list",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Ocultar los usuarios con mayor uso de CPU"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Masquer les processus utilisant le plus le CPU"
+          }
+        }
+      }
     },
     "LIVE · 1 SEC" : {
       "comment" : "1 second duration",
@@ -518,7 +546,21 @@
       }
     },
     "Show top CPU users" : {
-      "comment" : "Accessibility label for expanding the top CPU users list\nTooltip for expanding the top CPU users list"
+      "comment" : "Accessibility label for expanding the top CPU users list\nTooltip for expanding the top CPU users list",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Mostrar los usuarios con mayor uso de CPU"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Afficher les processus utilisant le plus le CPU"
+          }
+        }
+      }
     },
     "Shows memory categories" : {
       "comment" : "Accessibility hint for the memory summary card",
@@ -572,7 +614,21 @@
       }
     },
     "TOP CPU USERS" : {
-      "comment" : "Heading for the processes using the most CPU"
+      "comment" : "Heading for the processes using the most CPU",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Usuarios con mayor uso de CPU"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "PROCESSUS LES PLUS GOURMANDS EN CPU"
+          }
+        }
+      }
     },
     "Unknown" : {
       "comment" : "Fallback when the app version cannot be read",
@@ -609,7 +665,21 @@
       }
     },
     "Waiting for process data…" : {
-      "comment" : "Message shown before process CPU data is available"
+      "comment" : "Message shown before process CPU data is available",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Esperando los datos de los procesos…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "En attente des données des processus…"
+          }
+        }
+      }
     },
     "Wired" : {
       "comment" : "Wired memory category",
@@ -629,5 +699,5 @@
       }
     }
   },
-  "version" : "1.1"
+  "version" : "1.3"
 }

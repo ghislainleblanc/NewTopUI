@@ -56,9 +56,21 @@
             "state" : "new",
             "value" : ""
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : ""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : ""
+          }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version" : "1.3"
 }

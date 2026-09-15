@@ -51,7 +51,3 @@ System Pulse uses native macOS APIs:
 - SwiftUI with the Observation framework for the live dashboard
 
 GPU utilization is hardware-dependent and may display as unavailable on systems that do not expose compatible accelerator statistics.
-
-## License
-
-No license has been specified for this project.

@@ -86,11 +86,8 @@ final class MonitorPanelController: NSObject {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.isReleasedWhenClosed = false
 
-        let fittingSize = hostingController.sizeThatFits(
-            in: NSSize(width: 420, height: CGFloat.greatestFiniteMagnitude)
-        )
-        panel.setContentSize(fittingSize)
-
+        // Keep the fixed panel size defined above. Measuring the hosting controller here
+        // would synchronously trigger AppKit layout while the hosting view is being attached.
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(panelDidMove(_:)),
@@ -138,24 +135,25 @@ final class MonitorPanelController: NSObject {
 
     func installMenuBarItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        guard let button = item.button else { return }
-        let iconConfiguration = NSImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        button.image = NSImage(
-            systemSymbolName: "cpu",
-            accessibilityDescription: String(localized: "System Pulse", comment: "App name")
-        )?
-            .withSymbolConfiguration(iconConfiguration)
-        button.image?.isTemplate = true
-        button.toolTip = String(localized: "System Pulse", comment: "App name")
-        button.target = self
-        button.action = #selector(statusItemClicked(_:))
-        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem = item
 
-        // macOS realizes status items in a remote scene. Let its initial layout finish
-        // before reading the button geometry and presenting another window.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak button] in
-            guard let self, let button else { return }
+        // macOS realizes status items in a remote scene. Wait for that scene to finish
+        // connecting before mutating the button or presenting the monitor panel.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak item] in
+            guard let self, let button = item?.button else { return }
+
+            let iconConfiguration = NSImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+            button.image = NSImage(
+                systemSymbolName: "cpu",
+                accessibilityDescription: String(localized: "System Pulse", comment: "App name")
+            )?
+                .withSymbolConfiguration(iconConfiguration)
+            button.image?.isTemplate = true
+            button.toolTip = String(localized: "System Pulse", comment: "App name")
+            button.target = self
+            button.action = #selector(statusItemClicked(_:))
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+
             show(relativeTo: button)
         }
     }

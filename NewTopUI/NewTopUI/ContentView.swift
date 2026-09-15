@@ -18,6 +18,7 @@ struct ContentView: View {
             MetricCard {
                 TopCPUUsersSection(users: model.topCPUUsers)
             }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             HStack(alignment: .top, spacing: 10) {
                 MetricCard {
@@ -232,7 +233,7 @@ private struct TopCPUUsersSection: View {
     var body: some View {
         VStack(spacing: 8) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(.easeInOut(duration: 0.3)) {
                     isShowingUsers.toggle()
                 }
             } label: {
@@ -274,7 +275,7 @@ private struct TopCPUUsersSection: View {
                             ProcessCPUUserRow(user: user)
                         }
                     }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
         }

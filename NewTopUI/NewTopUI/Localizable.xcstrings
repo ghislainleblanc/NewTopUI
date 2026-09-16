@@ -172,6 +172,23 @@
         }
       }
     },
+    "Close process details" : {
+      "comment" : "Accessibility label for closing process details",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Cerrar los detalles del proceso"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Fermer les détails du processus"
+          }
+        }
+      }
+    },
     "Compressed" : {
       "comment" : "Compressed memory category",
       "localizations" : {

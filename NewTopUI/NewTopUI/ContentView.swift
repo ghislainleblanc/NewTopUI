@@ -62,10 +62,10 @@ private struct MonitorContent: View {
                 CPUSection(model: model)
             }
 
-            MetricCard {
+            MetricCard(showsBorder: false) {
                 TopCPUUsersSection(users: model.topCPUUsers, isShowingUsers: $isShowingTopCPUUsers)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .zIndex(1)
 
             HStack(alignment: .top, spacing: 10) {
                 MetricCard {
@@ -218,15 +218,23 @@ private struct HeaderButton: View {
 }
 
 private struct MetricCard<Content: View>: View {
+    let showsBorder: Bool
     @ViewBuilder let content: () -> Content
+
+    init(showsBorder: Bool = true, @ViewBuilder content: @escaping () -> Content) {
+        self.showsBorder = showsBorder
+        self.content = content
+    }
 
     var body: some View {
         content()
             .padding(12)
             .background(Color.black.opacity(0.13), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                if showsBorder {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                }
             }
     }
 }
@@ -330,7 +338,9 @@ private struct TopCPUUsersSection: View {
                     VStack(spacing: 5) {
                         ForEach(users) { user in
                             ProcessCPUUserRow(user: user) {
-                                selectedUser = user
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedUser = user
+                                }
                             }
                         }
                     }
@@ -338,8 +348,18 @@ private struct TopCPUUsersSection: View {
                 }
             }
         }
-        .popover(item: $selectedUser) { user in
-            ProcessDetailPopover(user: user)
+        .overlay(alignment: .topTrailing) {
+            if let selectedUser {
+                ProcessDetailOverlay(user: selectedUser) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        self.selectedUser = nil
+                    }
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
+            }
+        }
+        .onExitCommand {
+            selectedUser = nil
         }
     }
 }
@@ -417,12 +437,27 @@ private struct ProcessCPUUserRow: View {
     }
 }
 
-private struct ProcessDetailPopover: View {
+private struct ProcessDetailOverlay: View {
     let user: ProcessCPUUsage
+    let onClose: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            ProcessDetailHeader(name: user.name, icon: user.icon)
+            HStack(alignment: .top, spacing: 10) {
+                ProcessDetailHeader(name: user.name, icon: user.icon)
+
+                Spacer()
+
+                Button(action: onClose) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(
+                    String(localized: "Close process details", comment: "Accessibility label for closing process details")
+                )
+            }
 
             VStack(spacing: 8) {
                 ProcessDetailRow(
@@ -466,6 +501,21 @@ private struct ProcessDetailPopover: View {
         }
         .padding(16)
         .frame(width: 320)
+        .background {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color(nsColor: .windowBackgroundColor))
+
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.regularMaterial)
+                    .opacity(0.65)
+            }
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5)
+        }
+        .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
     }
 }
 

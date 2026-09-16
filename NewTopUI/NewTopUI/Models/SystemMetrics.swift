@@ -12,6 +12,11 @@ struct ProcessCPUUsage: Identifiable {
     let name: String
     let icon: NSImage
     let fraction: Double
+    let memoryBytes: UInt64
+    let threadCount: Int
+    let bundleIdentifier: String?
+    let executableURL: URL?
+    let launchDate: Date?
 }
 
 struct NetworkPoint: Identifiable, Equatable {

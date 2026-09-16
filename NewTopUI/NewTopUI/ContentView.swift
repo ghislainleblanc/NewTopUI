@@ -285,31 +285,25 @@ private struct TopCPUUsersSection: View {
 private struct ProcessCPUUserRow: View {
     let user: ProcessCPUUsage
 
+    @State private var isShowingDetails = false
+
     var body: some View {
-        HStack(spacing: 7) {
-            Image(nsImage: user.icon)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 20, height: 20)
-                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        Button {
+            isShowingDetails = true
+        } label: {
+            HStack(spacing: 7) {
+                Image(nsImage: user.icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 20, height: 20)
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
 
-            Text(user.name)
-                .font(.system(size: 10, weight: .medium, design: .rounded))
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(user.name)
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            GeometryReader { proxy in
-                UnevenRoundedRectangle(
-                    cornerRadii: RectangleCornerRadii(
-                        topLeading: 0,
-                        bottomLeading: 0,
-                        bottomTrailing: 3,
-                        topTrailing: 3
-                    ),
-                    style: .continuous
-                )
-                .fill(Color.primary.opacity(0.07))
-                .overlay(alignment: .leading) {
+                GeometryReader { proxy in
                     UnevenRoundedRectangle(
                         cornerRadii: RectangleCornerRadii(
                             topLeading: 0,
@@ -319,29 +313,141 @@ private struct ProcessCPUUserRow: View {
                         ),
                         style: .continuous
                     )
-                    .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(3, proxy.size.width * user.fraction))
+                    .fill(Color.primary.opacity(0.07))
+                    .overlay(alignment: .leading) {
+                        UnevenRoundedRectangle(
+                            cornerRadii: RectangleCornerRadii(
+                                topLeading: 0,
+                                bottomLeading: 0,
+                                bottomTrailing: 3,
+                                topTrailing: 3
+                            ),
+                            style: .continuous
+                        )
+                        .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: max(3, proxy.size.width * user.fraction))
+                    }
                 }
-            }
-            .frame(width: 76, height: 7)
+                .frame(width: 76, height: 7)
 
-            Text(user.fraction.formatted(.percent.precision(.fractionLength(0))))
-                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .frame(width: 34, alignment: .trailing)
+                Text(user.fraction.formatted(.percent.precision(.fractionLength(0))))
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, alignment: .trailing)
+            }
         }
+        .buttonStyle(.plain)
         .help(
             String(
                 format: String(
-                    localized: "%1$@: %2$@ CPU",
-                    comment: "Tooltip showing an app name and its CPU usage"
+                    localized: "Show details for %1$@, using %2$@ CPU",
+                    comment: "Tooltip for a top CPU user entry. The first placeholder is the app name and the second is CPU usage."
                 ),
                 locale: .current,
                 user.name,
                 user.fraction.formatted(.percent.precision(.fractionLength(0)))
             )
         )
+        .accessibilityLabel(
+            String(
+                localized: "Show details for \(user.name)",
+                comment: "Accessibility label for a top CPU user entry. The placeholder is the app name."
+            )
+        )
+        .popover(isPresented: $isShowingDetails) {
+            ProcessDetailPopover(user: user)
+        }
+    }
+}
+
+private struct ProcessDetailPopover: View {
+    let user: ProcessCPUUsage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ProcessDetailHeader(name: user.name, icon: user.icon)
+
+            VStack(spacing: 8) {
+                ProcessDetailRow(
+                    title: String(localized: "CPU Usage", comment: "Label for an app's current CPU usage."),
+                    value: user.fraction.formatted(.percent.precision(.fractionLength(1)))
+                )
+                ProcessDetailRow(
+                    title: String(localized: "Memory Usage", comment: "Label for an app's current memory usage."),
+                    value: ByteFormatting.compact(user.memoryBytes)
+                )
+                ProcessDetailRow(
+                    title: String(localized: "Threads", comment: "Label for the number of threads used by an app."),
+                    value: user.threadCount.formatted()
+                )
+                ProcessDetailRow(
+                    title: String(localized: "Process ID", comment: "Label for an app's process identifier."),
+                    value: String(user.id)
+                )
+
+                if let bundleIdentifier = user.bundleIdentifier {
+                    ProcessDetailRow(
+                        title: String(localized: "Bundle ID", comment: "Label for an app's bundle identifier."),
+                        value: bundleIdentifier
+                    )
+                }
+
+                if let executableURL = user.executableURL {
+                    ProcessDetailRow(
+                        title: String(localized: "Executable", comment: "Label for an app's executable path."),
+                        value: executableURL.path
+                    )
+                }
+
+                if let launchDate = user.launchDate {
+                    ProcessDetailRow(
+                        title: String(localized: "Launched", comment: "Label for the date and time an app was launched."),
+                        value: launchDate.formatted(date: .abbreviated, time: .shortened)
+                    )
+                }
+            }
+        }
+        .padding(16)
+        .frame(width: 320)
+    }
+}
+
+private struct ProcessDetailHeader: View {
+    let name: String
+    let icon: NSImage
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(nsImage: icon)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 36, height: 36)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            Text(name)
+                .font(.headline)
+                .lineLimit(2)
+        }
+    }
+}
+
+private struct ProcessDetailRow: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text(value)
+                .font(.callout)
+                .textSelection(.enabled)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

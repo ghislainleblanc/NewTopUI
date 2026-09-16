@@ -126,7 +126,11 @@ final class SystemMetricsReader {
         return readings.max()
     }
 
-    private func currentProcessSnapshot() -> (cpu: [pid_t: UInt64], parents: [pid_t: pid_t]) {
+    private func currentProcessSnapshot() -> (
+        cpu: [pid_t: UInt64],
+        parents: [pid_t: pid_t],
+        resources: [pid_t: (memoryBytes: UInt64, threadCount: Int)]
+    ) {
         let ownProcessID = ProcessInfo.processInfo.processIdentifier
         let applications = NSWorkspace.shared.runningApplications.filter {
             $0.processIdentifier > 0
@@ -140,6 +144,7 @@ final class SystemMetricsReader {
         var visited = Set<pid_t>()
         var cpu: [pid_t: UInt64] = [:]
         var parents: [pid_t: pid_t] = [:]
+        var resources: [pid_t: (memoryBytes: UInt64, threadCount: Int)] = [:]
 
         while let entry = queue.first {
             queue.removeFirst()
@@ -149,6 +154,10 @@ final class SystemMetricsReader {
             let taskInfoSize = Int32(MemoryLayout<proc_taskinfo>.stride)
             if proc_pidinfo(entry.pid, PROC_PIDTASKINFO, 0, &taskInfo, taskInfoSize) == taskInfoSize {
                 cpu[entry.pid] = taskInfo.pti_total_user &+ taskInfo.pti_total_system
+                resources[entry.pid] = (
+                    memoryBytes: taskInfo.pti_resident_size,
+                    threadCount: Int(taskInfo.pti_threadnum)
+                )
             }
             if let parent = entry.parent {
                 parents[entry.pid] = parent
@@ -170,7 +179,7 @@ final class SystemMetricsReader {
             })
         }
 
-        return (cpu, parents)
+        return (cpu, parents, resources)
     }
 
     private func descendantPIDs(
@@ -236,7 +245,12 @@ final class SystemMetricsReader {
                     id: application.processIdentifier,
                     name: name,
                     icon: icon,
-                    fraction: 0
+                    fraction: 0,
+                    memoryBytes: processSnapshot.resources[application.processIdentifier]?.memoryBytes ?? 0,
+                    threadCount: processSnapshot.resources[application.processIdentifier]?.threadCount ?? 0,
+                    bundleIdentifier: application.bundleIdentifier,
+                    executableURL: application.executableURL,
+                    launchDate: application.launchDate
                 )
             }
             .prefix(5)
@@ -263,7 +277,12 @@ final class SystemMetricsReader {
                 id: application.processIdentifier,
                 name: name,
                 icon: icon,
-                fraction: min(max(cpuFraction, 0), 1)
+                fraction: min(max(cpuFraction, 0), 1),
+                memoryBytes: processSnapshot.resources[application.processIdentifier]?.memoryBytes ?? 0,
+                threadCount: processSnapshot.resources[application.processIdentifier]?.threadCount ?? 0,
+                bundleIdentifier: application.bundleIdentifier,
+                executableURL: application.executableURL,
+                launchDate: application.launchDate
             )
         }
         .sorted { $0.fraction > $1.fraction }

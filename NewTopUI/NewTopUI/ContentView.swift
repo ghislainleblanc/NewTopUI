@@ -296,59 +296,60 @@ private struct TopCPUUsersSection: View {
     @State private var selectedUser: ProcessCPUUsage?
 
     var body: some View {
-        VStack(spacing: 8) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    isShowingUsers.toggle()
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 8) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isShowingUsers.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "list.number")
+                            .foregroundStyle(.cyan)
+
+                        Text(String(localized: "TOP CPU USERS", comment: "Heading for the processes using the most CPU"))
+                            .foregroundStyle(.secondary)
+
+                        Spacer()
+
+                        Image(systemName: isShowingUsers ? "chevron.up" : "chevron.down")
+                            .foregroundStyle(.tertiary)
+                    }
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
                 }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "list.number")
-                        .foregroundStyle(.cyan)
+                .buttonStyle(.plain)
+                .help(
+                    isShowingUsers
+                        ? String(localized: "Hide top CPU users", comment: "Tooltip for collapsing the top CPU users list")
+                        : String(localized: "Show top CPU users", comment: "Tooltip for expanding the top CPU users list")
+                )
+                .accessibilityLabel(
+                    isShowingUsers
+                        ? String(localized: "Hide top CPU users", comment: "Accessibility label for collapsing the top CPU users list")
+                        : String(localized: "Show top CPU users", comment: "Accessibility label for expanding the top CPU users list")
+                )
 
-                    Text(String(localized: "TOP CPU USERS", comment: "Heading for the processes using the most CPU"))
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    Image(systemName: isShowingUsers ? "chevron.up" : "chevron.down")
-                        .foregroundStyle(.tertiary)
-                }
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-            }
-            .buttonStyle(.plain)
-            .help(
-                isShowingUsers
-                    ? String(localized: "Hide top CPU users", comment: "Tooltip for collapsing the top CPU users list")
-                    : String(localized: "Show top CPU users", comment: "Tooltip for expanding the top CPU users list")
-            )
-            .accessibilityLabel(
-                isShowingUsers
-                    ? String(localized: "Hide top CPU users", comment: "Accessibility label for collapsing the top CPU users list")
-                    : String(localized: "Show top CPU users", comment: "Accessibility label for expanding the top CPU users list")
-            )
-
-            if isShowingUsers {
-                if users.isEmpty {
-                    Text(String(localized: "Waiting for process data…", comment: "Message shown before process CPU data is available"))
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .foregroundStyle(.tertiary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    VStack(spacing: 5) {
-                        ForEach(users) { user in
-                            ProcessCPUUserRow(user: user) {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    selectedUser = user
+                if isShowingUsers {
+                    if users.isEmpty {
+                        Text(String(localized: "Waiting for process data…", comment: "Message shown before process CPU data is available"))
+                            .font(.system(size: 9, weight: .medium, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        VStack(spacing: 5) {
+                            ForEach(users) { user in
+                                ProcessCPUUserRow(user: user) {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        selectedUser = user
+                                    }
                                 }
                             }
                         }
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
-        }
-        .overlay(alignment: .topTrailing) {
+
             if let selectedUser {
                 ProcessDetailOverlay(user: selectedUser) {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -487,7 +488,8 @@ private struct ProcessDetailOverlay: View {
                 if let executableURL = user.executableURL {
                     ProcessDetailRow(
                         title: String(localized: "Executable", comment: "Label for an app's executable path."),
-                        value: executableURL.path
+                        value: executableURL.path,
+                        lineLimit: nil
                     )
                 }
 
@@ -541,6 +543,7 @@ private struct ProcessDetailHeader: View {
 private struct ProcessDetailRow: View {
     let title: String
     let value: String
+    var lineLimit: Int? = 2
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -551,7 +554,8 @@ private struct ProcessDetailRow: View {
             Text(value)
                 .font(.callout)
                 .textSelection(.enabled)
-                .lineLimit(2)
+                .lineLimit(lineLimit)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

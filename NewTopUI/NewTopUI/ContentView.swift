@@ -238,7 +238,7 @@ private struct TopCPUUsersSection: View {
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Image(systemName: "person.2.fill")
+                    Image(systemName: "list.number")
                         .foregroundStyle(.cyan)
 
                     Text(String(localized: "TOP CPU USERS", comment: "Heading for the processes using the most CPU"))

@@ -285,6 +285,8 @@ private struct TopCPUUsersSection: View {
     let users: [ProcessCPUUsage]
     @Binding var isShowingUsers: Bool
 
+    @State private var selectedUser: ProcessCPUUsage?
+
     var body: some View {
         VStack(spacing: 8) {
             Button {
@@ -327,25 +329,27 @@ private struct TopCPUUsersSection: View {
                 } else {
                     VStack(spacing: 5) {
                         ForEach(users) { user in
-                            ProcessCPUUserRow(user: user)
+                            ProcessCPUUserRow(user: user) {
+                                selectedUser = user
+                            }
                         }
                     }
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
         }
+        .popover(item: $selectedUser) { user in
+            ProcessDetailPopover(user: user)
+        }
     }
 }
 
 private struct ProcessCPUUserRow: View {
     let user: ProcessCPUUsage
-
-    @State private var isShowingDetails = false
+    let onShowDetails: () -> Void
 
     var body: some View {
-        Button {
-            isShowingDetails = true
-        } label: {
+        Button(action: onShowDetails) {
             HStack(spacing: 7) {
                 Image(nsImage: user.icon)
                     .resizable()
@@ -410,9 +414,6 @@ private struct ProcessCPUUserRow: View {
                 comment: "Accessibility label for a top CPU user entry. The placeholder is the app name."
             )
         )
-        .popover(isPresented: $isShowingDetails) {
-            ProcessDetailPopover(user: user)
-        }
     }
 }
 

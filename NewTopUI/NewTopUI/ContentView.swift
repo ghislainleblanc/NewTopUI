@@ -296,66 +296,66 @@ private struct TopCPUUsersSection: View {
     @State private var selectedUser: ProcessCPUUsage?
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(spacing: 8) {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        isShowingUsers.toggle()
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "list.number")
-                            .foregroundStyle(.cyan)
-
-                        Text(String(localized: "TOP CPU USERS", comment: "Heading for the processes using the most CPU"))
-                            .foregroundStyle(.secondary)
-
-                        Spacer()
-
-                        Image(systemName: isShowingUsers ? "chevron.up" : "chevron.down")
-                            .foregroundStyle(.tertiary)
-                    }
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
+        VStack(spacing: 8) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isShowingUsers.toggle()
                 }
-                .buttonStyle(.plain)
-                .help(
-                    isShowingUsers
-                        ? String(localized: "Hide top CPU users", comment: "Tooltip for collapsing the top CPU users list")
-                        : String(localized: "Show top CPU users", comment: "Tooltip for expanding the top CPU users list")
-                )
-                .accessibilityLabel(
-                    isShowingUsers
-                        ? String(localized: "Hide top CPU users", comment: "Accessibility label for collapsing the top CPU users list")
-                        : String(localized: "Show top CPU users", comment: "Accessibility label for expanding the top CPU users list")
-                )
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "list.number")
+                        .foregroundStyle(.cyan)
 
-                if isShowingUsers {
-                    if users.isEmpty {
-                        Text(String(localized: "Waiting for process data…", comment: "Message shown before process CPU data is available"))
-                            .font(.system(size: 9, weight: .medium, design: .rounded))
-                            .foregroundStyle(.tertiary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        VStack(spacing: 5) {
-                            ForEach(users) { user in
-                                ProcessCPUUserRow(user: user) {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        selectedUser = user
-                                    }
+                    Text(String(localized: "TOP CPU USERS", comment: "Heading for the processes using the most CPU"))
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Image(systemName: isShowingUsers ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(.tertiary)
+                }
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+            }
+            .buttonStyle(.plain)
+            .help(
+                isShowingUsers
+                    ? String(localized: "Hide top CPU users", comment: "Tooltip for collapsing the top CPU users list")
+                    : String(localized: "Show top CPU users", comment: "Tooltip for expanding the top CPU users list")
+            )
+            .accessibilityLabel(
+                isShowingUsers
+                    ? String(localized: "Hide top CPU users", comment: "Accessibility label for collapsing the top CPU users list")
+                    : String(localized: "Show top CPU users", comment: "Accessibility label for expanding the top CPU users list")
+            )
+
+            if isShowingUsers {
+                if users.isEmpty {
+                    Text(String(localized: "Waiting for process data…", comment: "Message shown before process CPU data is available"))
+                        .font(.system(size: 9, weight: .medium, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    VStack(spacing: 5) {
+                        ForEach(users) { user in
+                            ProcessCPUUserRow(user: user) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedUser = user
                                 }
                             }
                         }
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
-
+        }
+        .overlay(alignment: .topTrailing) {
             if let selectedUser {
                 ProcessDetailOverlay(user: selectedUser) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         self.selectedUser = nil
                     }
                 }
+                .fixedSize(horizontal: false, vertical: true)
                 .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
             }
         }

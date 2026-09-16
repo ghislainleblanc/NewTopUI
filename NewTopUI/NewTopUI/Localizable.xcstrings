@@ -800,6 +800,40 @@
         }
       }
     },
+    "Use full size" : {
+      "comment" : "Tooltip for switching the monitor to full size",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar tamaño completo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser la taille normale"
+          }
+        }
+      }
+    },
+    "Use small size" : {
+      "comment" : "Tooltip for switching the monitor to 75 percent size",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar tamaño pequeño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser la petite taille"
+          }
+        }
+      }
+    },
     "Waiting for process data…" : {
       "comment" : "Message shown before process CPU data is available",
       "localizations" : {

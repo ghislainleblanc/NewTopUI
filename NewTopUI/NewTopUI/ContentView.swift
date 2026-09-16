@@ -4,19 +4,66 @@ struct ContentView: View {
     let model: ResourceMonitorModel
     let onClose: () -> Void
     let onQuit: () -> Void
+    let onSizeChange: (CGSize) -> Void
+
+    @State private var isCompact = false
+    @State private var isShowingTopCPUUsers = true
+    @State private var unscaledSize = CGSize(width: 420, height: 494)
+
+    private var scale: CGFloat {
+        isCompact ? 0.75 : 1
+    }
+
+    private var scaledSize: CGSize {
+        CGSize(width: unscaledSize.width * scale, height: unscaledSize.height * scale)
+    }
+
+    var body: some View {
+        MonitorContent(
+            model: model,
+            isCompact: $isCompact,
+            isShowingTopCPUUsers: $isShowingTopCPUUsers,
+            onClose: onClose,
+            onQuit: onQuit
+        )
+        .fixedSize(horizontal: true, vertical: true)
+        .onGeometryChange(for: CGSize.self) { proxy in
+            proxy.size
+        } action: { newSize in
+            unscaledSize = newSize
+        }
+        .scaleEffect(scale, anchor: .topLeading)
+        .frame(width: scaledSize.width, height: scaledSize.height, alignment: .topLeading)
+        .onChange(of: scaledSize, initial: true) { _, newSize in
+            onSizeChange(newSize)
+        }
+    }
+}
+
+private struct MonitorContent: View {
+    let model: ResourceMonitorModel
+    @Binding var isCompact: Bool
+    @Binding var isShowingTopCPUUsers: Bool
+    let onClose: () -> Void
+    let onQuit: () -> Void
 
     var body: some View {
         VStack(spacing: 12) {
-            ContentHeader(onQuit: onQuit, onClose: onClose) { newRefreshInterval in
-                model.refreshInterval = newRefreshInterval
-            }
+            ContentHeader(
+                isCompact: $isCompact,
+                onQuit: onQuit,
+                onClose: onClose,
+                onRefreshIntervalChange: { newRefreshInterval in
+                    model.refreshInterval = newRefreshInterval
+                }
+            )
 
             MetricCard {
                 CPUSection(model: model)
             }
 
             MetricCard {
-                TopCPUUsersSection(users: model.topCPUUsers)
+                TopCPUUsersSection(users: model.topCPUUsers, isShowingUsers: $isShowingTopCPUUsers)
             }
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
@@ -60,6 +107,7 @@ struct ContentView: View {
 }
 
 private struct ContentHeader: View {
+    @Binding var isCompact: Bool
     let onQuit: () -> Void
     let onClose: () -> Void
     let onRefreshIntervalChange: (TimeInterval) -> Void
@@ -119,6 +167,14 @@ private struct ContentHeader: View {
             }
 
             Spacer()
+
+            HeaderButton(
+                symbol: isCompact ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left",
+                help: isCompact
+                    ? String(localized: "Use full size", comment: "Tooltip for switching the monitor to full size")
+                    : String(localized: "Use small size", comment: "Tooltip for switching the monitor to 75 percent size"),
+                action: { isCompact.toggle() }
+            )
 
             HeaderButton(
                 symbol: "power",
@@ -227,8 +283,7 @@ private struct CPUSection: View {
 
 private struct TopCPUUsersSection: View {
     let users: [ProcessCPUUsage]
-
-    @State private var isShowingUsers = true
+    @Binding var isShowingUsers: Bool
 
     var body: some View {
         VStack(spacing: 8) {

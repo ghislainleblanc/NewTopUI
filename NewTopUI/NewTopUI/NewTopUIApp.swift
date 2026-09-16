@@ -59,6 +59,7 @@ final class MonitorPanelController: NSObject {
     private var isRestoringAfterWake = false
     private var wakeRestorationStableAttempts = 0
     private var wakeRestorationWorkItem: DispatchWorkItem?
+    private var panelResizeWorkItem: DispatchWorkItem?
 
     override init() {
         let panel = DraggablePanel(
@@ -73,7 +74,8 @@ final class MonitorPanelController: NSObject {
         let rootView = ContentView(
             model: model,
             onClose: { [weak self] in self?.hide() },
-            onQuit: { NSApplication.shared.terminate(nil) }
+            onQuit: { NSApplication.shared.terminate(nil) },
+            onSizeChange: { [weak self] size in self?.schedulePanelResize(to: size) }
         )
         let hostingController = NSHostingController(rootView: rootView)
         panel.contentViewController = hostingController
@@ -160,6 +162,7 @@ final class MonitorPanelController: NSObject {
 
     func stop() {
         wakeRestorationWorkItem?.cancel()
+        panelResizeWorkItem?.cancel()
         if hasPositionedPanel, !isRestoringAfterWake {
             savePanelPlacement()
         }
@@ -421,6 +424,31 @@ final class MonitorPanelController: NSObject {
     private func hide() {
         panel.orderOut(nil)
         model.stop()
+    }
+
+    private func resizePanel(to size: CGSize) {
+        guard size.width > 0, size.height > 0, panel.frame.size != size else {
+            return
+        }
+
+        let currentFrame = panel.frame
+        let resizedFrame = NSRect(
+            x: currentFrame.minX,
+            y: currentFrame.maxY - size.height,
+            width: size.width,
+            height: size.height
+        )
+        panel.setFrame(resizedFrame, display: true)
+    }
+
+    private func schedulePanelResize(to size: CGSize) {
+        panelResizeWorkItem?.cancel()
+
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.resizePanel(to: size)
+        }
+        panelResizeWorkItem = workItem
+        DispatchQueue.main.async(execute: workItem)
     }
 
     private func showContextMenu(relativeTo button: NSStatusBarButton) {

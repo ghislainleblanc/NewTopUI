@@ -376,23 +376,6 @@
         }
       }
     },
-    "Hide top CPU users" : {
-      "comment" : "Accessibility label for collapsing the top CPU users list\nTooltip for collapsing the top CPU users list",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Ocultar los usuarios con mayor uso de CPU"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Masquer les processus utilisant le plus le CPU"
-          }
-        }
-      }
-    },
     "Launched" : {
       "comment" : "Label for the date and time an app was launched.",
       "localizations" : {
@@ -681,23 +664,6 @@
         }
       }
     },
-    "Show top CPU users" : {
-      "comment" : "Accessibility label for expanding the top CPU users list\nTooltip for expanding the top CPU users list",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Mostrar los usuarios con mayor uso de CPU"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Afficher les processus utilisant le plus le CPU"
-          }
-        }
-      }
-    },
     "Shows memory categories" : {
       "comment" : "Accessibility hint for the memory summary card",
       "localizations" : {
@@ -766,19 +732,19 @@
         }
       }
     },
-    "TOP CPU USERS" : {
+    "Top CPU consumers" : {
       "comment" : "Heading for the processes using the most CPU",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Usuarios con mayor uso de CPU"
+            "value" : "Procesos con mayor uso de CPU"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "PROCESSUS LES PLUS GOURMANDS EN CPU"
+            "value" : "Processus les plus gourmands en CPU"
           }
         }
       }

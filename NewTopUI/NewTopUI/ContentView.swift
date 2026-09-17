@@ -7,7 +7,6 @@ struct ContentView: View {
     let onSizeChange: (CGSize) -> Void
 
     @State private var isCompact = false
-    @State private var isShowingTopCPUUsers = true
     @State private var unscaledSize = CGSize(width: 420, height: 494)
 
     private var scale: CGFloat {
@@ -22,7 +21,6 @@ struct ContentView: View {
         MonitorContent(
             model: model,
             isCompact: $isCompact,
-            isShowingTopCPUUsers: $isShowingTopCPUUsers,
             onClose: onClose,
             onQuit: onQuit
         )
@@ -43,7 +41,6 @@ struct ContentView: View {
 private struct MonitorContent: View {
     let model: ResourceMonitorModel
     @Binding var isCompact: Bool
-    @Binding var isShowingTopCPUUsers: Bool
     let onClose: () -> Void
     let onQuit: () -> Void
 
@@ -63,7 +60,7 @@ private struct MonitorContent: View {
             }
 
             MetricCard(showsBorder: false) {
-                TopCPUUsersSection(users: model.topCPUUsers, isShowingUsers: $isShowingTopCPUUsers)
+                TopCPUUsersSection(users: model.topCPUUsers)
             }
             .zIndex(1)
 
@@ -71,8 +68,10 @@ private struct MonitorContent: View {
                 MetricCard {
                     GPUSection(model: model)
                 }
+                .frame(maxWidth: .infinity, alignment: .top)
 
                 MemoryCard(memory: model.memory)
+                    .frame(maxWidth: .infinity, alignment: .top)
             }
 
             MetricCard {
@@ -291,45 +290,24 @@ private struct CPUSection: View {
 
 private struct TopCPUUsersSection: View {
     let users: [ProcessCPUUsage]
-    @Binding var isShowingUsers: Bool
 
     @State private var selectedUser: ProcessCPUUsage?
 
     var body: some View {
         VStack(spacing: 8) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    isShowingUsers.toggle()
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "list.number")
-                        .foregroundStyle(.cyan)
+            HStack(spacing: 6) {
+                Image(systemName: "list.number")
+                    .foregroundStyle(.cyan)
 
-                    Text(String(localized: "TOP CPU USERS", comment: "Heading for the processes using the most CPU"))
-                        .foregroundStyle(.secondary)
+                Text(String(localized: "Top CPU consumers", comment: "Heading for the processes using the most CPU"))
+                    .textCase(.uppercase)
+                    .foregroundStyle(.secondary)
 
-                    Spacer()
-
-                    Image(systemName: isShowingUsers ? "chevron.up" : "chevron.down")
-                        .foregroundStyle(.tertiary)
-                }
-                .font(.system(size: 10, weight: .bold, design: .rounded))
+                Spacer()
             }
-            .buttonStyle(.plain)
-            .help(
-                isShowingUsers
-                    ? String(localized: "Hide top CPU users", comment: "Tooltip for collapsing the top CPU users list")
-                    : String(localized: "Show top CPU users", comment: "Tooltip for expanding the top CPU users list")
-            )
-            .accessibilityLabel(
-                isShowingUsers
-                    ? String(localized: "Hide top CPU users", comment: "Accessibility label for collapsing the top CPU users list")
-                    : String(localized: "Show top CPU users", comment: "Accessibility label for expanding the top CPU users list")
-            )
+            .font(.system(size: 10, weight: .bold, design: .rounded))
 
-            if isShowingUsers {
-                if users.isEmpty {
+            if users.isEmpty {
                     Text(String(localized: "Waiting for process data…", comment: "Message shown before process CPU data is available"))
                         .font(.system(size: 9, weight: .medium, design: .rounded))
                         .foregroundStyle(.tertiary)
@@ -345,7 +323,6 @@ private struct TopCPUUsersSection: View {
                         }
                     }
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
-                }
             }
         }
         .overlay(alignment: .topTrailing) {
@@ -721,11 +698,13 @@ private struct MemoryCard: View {
             ZStack {
                 MetricCard {
                     MemorySection(memory: memory)
+                        .frame(height: 70)
                 }
                 .opacity(isShowingDetails ? 0 : 1)
 
                 MetricCard {
                     MemoryBreakdownSection(memory: memory)
+                        .frame(height: 70)
                 }
                 .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
                 .opacity(isShowingDetails ? 1 : 0)

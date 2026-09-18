@@ -38,11 +38,6 @@ private final class DraggablePanel: NSPanel {
 }
 
 final class MonitorPanelController: NSObject {
-    private struct PanelPlacement {
-        let screenIdentifier: String
-        let relativeOrigin: NSPoint
-    }
-
     private static let panelOriginDefaultsKey = "monitorPanelOrigin"
     private static let panelScreenDefaultsKey = "monitorPanelScreen"
     private static let panelScreenOriginXDefaultsKey = "monitorPanelScreenOriginX"
@@ -73,9 +68,15 @@ final class MonitorPanelController: NSObject {
 
         let rootView = ContentView(
             model: model,
-            onClose: { [weak self] in self?.hide() },
-            onQuit: { NSApplication.shared.terminate(nil) },
-            onSizeChange: { [weak self] size in self?.schedulePanelResize(to: size) }
+            onClose: { [weak self] in
+                self?.hide()
+            },
+            onQuit: {
+                NSApplication.shared.terminate(nil)
+            },
+            onSizeChange: { [weak self] size in
+                self?.schedulePanelResize(to: size)
+            }
         )
         let hostingController = NSHostingController(rootView: rootView)
         panel.contentViewController = hostingController
@@ -142,14 +143,16 @@ final class MonitorPanelController: NSObject {
         // macOS realizes status items in a remote scene. Wait for that scene to finish
         // connecting before mutating the button or presenting the monitor panel.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak item] in
-            guard let self, let button = item?.button else { return }
+            guard let self, let button = item?.button else {
+                return
+            }
 
             let iconConfiguration = NSImage.SymbolConfiguration(pointSize: 18, weight: .medium)
             button.image = NSImage(
                 systemSymbolName: "cpu",
                 accessibilityDescription: String(localized: "System Pulse", comment: "App name")
             )?
-                .withSymbolConfiguration(iconConfiguration)
+            .withSymbolConfiguration(iconConfiguration)
             button.image?.isTemplate = true
             button.toolTip = String(localized: "System Pulse", comment: "App name")
             button.target = self
@@ -168,8 +171,15 @@ final class MonitorPanelController: NSObject {
         }
         model.stop()
     }
+}
 
-    @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
+private extension MonitorPanelController {
+    struct PanelPlacement {
+        let screenIdentifier: String
+        let relativeOrigin: NSPoint
+    }
+
+    @objc func statusItemClicked(_ sender: NSStatusBarButton) {
         if NSApplication.shared.currentEvent?.type == .rightMouseUp {
             showContextMenu(relativeTo: sender)
         } else if panel.isVisible {
@@ -179,7 +189,7 @@ final class MonitorPanelController: NSObject {
         }
     }
 
-    @objc private func toggleFromMenu() {
+    @objc func toggleFromMenu() {
         if panel.isVisible {
             hide()
         } else if let button = statusItem?.button {
@@ -187,8 +197,9 @@ final class MonitorPanelController: NSObject {
         }
     }
 
-    @objc private func showAbout() {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+    @objc func showAbout() {
+        let version =
+            Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
             ?? String(localized: "Unknown", comment: "Fallback when the app version cannot be read")
         NSApplication.shared.activate()
         NSApplication.shared.orderFrontStandardAboutPanel(
@@ -196,11 +207,11 @@ final class MonitorPanelController: NSObject {
         )
     }
 
-    @objc private func quit() {
+    @objc func quit() {
         NSApplication.shared.terminate(nil)
     }
 
-    @objc private func panelDidMove(_: Notification) {
+    @objc func panelDidMove(_: Notification) {
         guard !isRestoringAfterWake else {
             return
         }
@@ -208,7 +219,7 @@ final class MonitorPanelController: NSObject {
         savePanelPlacement()
     }
 
-    @objc private func workspaceWillSleep(_: Notification) {
+    @objc func workspaceWillSleep(_: Notification) {
         guard
             !isRestoringAfterWake,
             hasPositionedPanel,
@@ -224,7 +235,7 @@ final class MonitorPanelController: NSObject {
         wakeRestorationWorkItem?.cancel()
     }
 
-    @objc private func workspaceDidWake(_: Notification) {
+    @objc func workspaceDidWake(_: Notification) {
         guard placementBeforeSleep != nil else {
             isRestoringAfterWake = false
             return
@@ -233,7 +244,7 @@ final class MonitorPanelController: NSObject {
         scheduleWakeRestoration(attempt: 0, after: 0.25)
     }
 
-    @objc private func screenParametersDidChange(_: Notification) {
+    @objc func screenParametersDidChange(_: Notification) {
         guard
             isRestoringAfterWake,
             let placement = placementBeforeSleep
@@ -245,7 +256,7 @@ final class MonitorPanelController: NSObject {
         _ = restorePanelPlacementIfPossible(placement)
     }
 
-    private func savePanelPlacement() {
+    func savePanelPlacement() {
         let defaults = UserDefaults.standard
         defaults.set(NSStringFromPoint(panel.frame.origin), forKey: Self.panelOriginDefaultsKey)
 
@@ -258,7 +269,7 @@ final class MonitorPanelController: NSObject {
         defaults.set(placement.relativeOrigin.y, forKey: Self.panelScreenOriginYDefaultsKey)
     }
 
-    private func currentPanelPlacement() -> PanelPlacement? {
+    func currentPanelPlacement() -> PanelPlacement? {
         guard let screen = panel.screen, let screenIdentifier = screenIdentifier(for: screen) else {
             return nil
         }
@@ -272,7 +283,7 @@ final class MonitorPanelController: NSObject {
         )
     }
 
-    private func show(relativeTo button: NSStatusBarButton) {
+    func show(relativeTo button: NSStatusBarButton) {
         if !hasPositionedPanel {
             if let savedOrigin = savedPanelOrigin() {
                 panel.setFrameOrigin(savedOrigin)
@@ -294,7 +305,7 @@ final class MonitorPanelController: NSObject {
         panel.makeKeyAndOrderFront(nil)
     }
 
-    private func savedPanelOrigin() -> NSPoint? {
+    func savedPanelOrigin() -> NSPoint? {
         let defaults = UserDefaults.standard
 
         if let savedScreenIdentifier = defaults.string(forKey: Self.panelScreenDefaultsKey) {
@@ -320,6 +331,7 @@ final class MonitorPanelController: NSObject {
 
         let origin = NSPointFromString(originString)
         let savedFrame = NSRect(origin: origin, size: panel.frame.size)
+
         guard NSScreen.screens.contains(where: { $0.visibleFrame.intersects(savedFrame) }) else {
             return nil
         }
@@ -327,7 +339,7 @@ final class MonitorPanelController: NSObject {
         return origin
     }
 
-    private func scheduleWakeRestoration(attempt: Int, after delay: TimeInterval) {
+    func scheduleWakeRestoration(attempt: Int, after delay: TimeInterval) {
         wakeRestorationWorkItem?.cancel()
 
         let workItem = DispatchWorkItem { [weak self] in
@@ -363,17 +375,18 @@ final class MonitorPanelController: NSObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
     }
 
-    private func restorePanelPlacementIfPossible(_ placement: PanelPlacement) -> Bool {
+    func restorePanelPlacementIfPossible(_ placement: PanelPlacement) -> Bool {
         guard let origin = origin(for: placement) else {
             return false
         }
 
         panel.setFrameOrigin(origin)
         hasPositionedPanel = true
+
         return true
     }
 
-    private func finishWakeRestoration() {
+    func finishWakeRestoration() {
         wakeRestorationWorkItem?.cancel()
         wakeRestorationWorkItem = nil
         placementBeforeSleep = nil
@@ -381,7 +394,7 @@ final class MonitorPanelController: NSObject {
         wakeRestorationStableAttempts = 0
     }
 
-    private func origin(for placement: PanelPlacement) -> NSPoint? {
+    func origin(for placement: PanelPlacement) -> NSPoint? {
         guard
             let screen = NSScreen.screens.first(where: {
                 screenIdentifier(for: $0) == placement.screenIdentifier
@@ -394,10 +407,11 @@ final class MonitorPanelController: NSObject {
             x: screen.frame.minX + placement.relativeOrigin.x,
             y: screen.frame.minY + placement.relativeOrigin.y
         )
+
         return visibleOrigin(origin, on: screen)
     }
 
-    private func screenIdentifier(for screen: NSScreen) -> String? {
+    func screenIdentifier(for screen: NSScreen) -> String? {
         let screenNumberKey = NSDeviceDescriptionKey("NSScreenNumber")
         guard
             let screenNumber = screen.deviceDescription[screenNumberKey] as? NSNumber,
@@ -409,8 +423,9 @@ final class MonitorPanelController: NSObject {
         return CFUUIDCreateString(nil, displayUUID) as String
     }
 
-    private func visibleOrigin(_ origin: NSPoint, on screen: NSScreen) -> NSPoint {
+    func visibleOrigin(_ origin: NSPoint, on screen: NSScreen) -> NSPoint {
         let proposedFrame = NSRect(origin: origin, size: panel.frame.size)
+
         guard !screen.visibleFrame.intersects(proposedFrame) else {
             return origin
         }
@@ -418,15 +433,16 @@ final class MonitorPanelController: NSObject {
         let visibleFrame = screen.visibleFrame
         let x = min(max(origin.x, visibleFrame.minX + 8), visibleFrame.maxX - panel.frame.width - 8)
         let y = min(max(origin.y, visibleFrame.minY + 8), visibleFrame.maxY - panel.frame.height - 8)
+
         return NSPoint(x: x, y: y)
     }
 
-    private func hide() {
+    func hide() {
         panel.orderOut(nil)
         model.stop()
     }
 
-    private func resizePanel(to size: CGSize) {
+    func resizePanel(to size: CGSize) {
         guard size.width > 0, size.height > 0, panel.frame.size != size else {
             return
         }
@@ -441,7 +457,7 @@ final class MonitorPanelController: NSObject {
         panel.setFrame(resizedFrame, display: true)
     }
 
-    private func schedulePanelResize(to size: CGSize) {
+    func schedulePanelResize(to size: CGSize) {
         panelResizeWorkItem?.cancel()
 
         let workItem = DispatchWorkItem { [weak self] in
@@ -451,7 +467,7 @@ final class MonitorPanelController: NSObject {
         DispatchQueue.main.async(execute: workItem)
     }
 
-    private func showContextMenu(relativeTo button: NSStatusBarButton) {
+    func showContextMenu(relativeTo button: NSStatusBarButton) {
         let menu = NSMenu()
         let aboutItem = NSMenuItem(
             title: String(localized: "About System Pulse", comment: "Menu item that opens the About panel"),
@@ -461,11 +477,13 @@ final class MonitorPanelController: NSObject {
         aboutItem.target = self
         menu.addItem(aboutItem)
         menu.addItem(.separator())
-        let visibilityTitle = if panel.isVisible {
-            String(localized: "Hide System Pulse", comment: "Menu item that hides the monitor")
-        } else {
-            String(localized: "Show System Pulse", comment: "Menu item that shows the monitor")
-        }
+        let visibilityTitle =
+            if panel.isVisible {
+                String(localized: "Hide System Pulse", comment: "Menu item that hides the monitor")
+            } else {
+                String(localized: "Show System Pulse", comment: "Menu item that shows the monitor")
+            }
+
         let showItem = NSMenuItem(
             title: visibilityTitle,
             action: #selector(toggleFromMenu),

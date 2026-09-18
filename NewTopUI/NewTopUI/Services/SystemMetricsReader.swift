@@ -37,8 +37,10 @@ final class SystemMetricsReader {
             topCPUUsers: topCPUUsers
         )
     }
+}
 
-    private func currentCPUTicks() -> [[UInt64]]? {
+private extension SystemMetricsReader {
+    func currentCPUTicks() -> [[UInt64]]? {
         var processorCount: natural_t = 0
         var processorInfo: processor_info_array_t?
         var processorInfoCount: mach_msg_type_number_t = 0
@@ -51,7 +53,10 @@ final class SystemMetricsReader {
             &processorInfoCount
         )
 
-        guard result == KERN_SUCCESS, let processorInfo else { return nil }
+        guard result == KERN_SUCCESS, let processorInfo else {
+            return nil
+        }
+
         defer {
             let byteCount = vm_size_t(processorInfoCount) * vm_size_t(MemoryLayout<integer_t>.stride)
             vm_deallocate(mach_task_self_, vm_address_t(bitPattern: processorInfo), byteCount)
@@ -59,15 +64,22 @@ final class SystemMetricsReader {
 
         return (0 ..< Int(processorCount)).map { core in
             let offset = core * Int(CPU_STATE_MAX)
+
             return (0 ..< Int(CPU_STATE_MAX)).map { state in
                 UInt64(UInt32(bitPattern: processorInfo[offset + state]))
             }
         }
     }
 
-    private func sampleCPU() -> [CoreUsage] {
-        guard let current = currentCPUTicks() else { return [] }
-        defer { previousCPUTicks = current }
+    func sampleCPU() -> [CoreUsage] {
+        guard let current = currentCPUTicks() else {
+            return []
+        }
+
+        defer {
+            previousCPUTicks = current
+        }
+
         guard let previous = previousCPUTicks, previous.count == current.count else {
             return current.indices.map { CoreUsage(id: $0, fraction: 0) }
         }
@@ -78,20 +90,29 @@ final class SystemMetricsReader {
             let differences = currentCore.indices.map { state in
                 currentCore[state] >= previousCore[state] ? currentCore[state] - previousCore[state] : 0
             }
+
             let total = differences.reduce(0, +)
             let idle = differences[Int(CPU_STATE_IDLE)]
             let fraction = total > 0 ? Double(total - idle) / Double(total) : 0
+
             return CoreUsage(id: core, fraction: min(max(fraction, 0), 1))
         }
     }
 
-    private func sampleGPU() -> Double? {
-        guard let matching = IOServiceMatching("IOAccelerator") else { return nil }
+    func sampleGPU() -> Double? {
+        guard let matching = IOServiceMatching("IOAccelerator") else {
+            return nil
+        }
+
         var iterator: io_iterator_t = 0
+
         guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else {
             return nil
         }
-        defer { IOObjectRelease(iterator) }
+
+        defer {
+            IOObjectRelease(iterator)
+        }
 
         var readings: [Double] = []
         var service = IOIteratorNext(iterator)
@@ -101,14 +122,17 @@ final class SystemMetricsReader {
                 service = IOIteratorNext(iterator)
             }
 
-            guard let property = IORegistryEntryCreateCFProperty(
-                service,
-                "PerformanceStatistics" as CFString,
-                kCFAllocatorDefault,
-                0
-            )?.takeRetainedValue(),
+            guard
+                let property = IORegistryEntryCreateCFProperty(
+                    service,
+                    "PerformanceStatistics" as CFString,
+                    kCFAllocatorDefault,
+                    0
+                )?.takeRetainedValue(),
                 let statistics = property as? [String: Any]
-            else { continue }
+            else {
+                continue
+            }
 
             let preferredKeys = [
                 "Device Utilization %",
@@ -126,7 +150,7 @@ final class SystemMetricsReader {
         return readings.max()
     }
 
-    private func currentProcessSnapshot() -> (
+    func currentProcessSnapshot() -> (
         cpu: [pid_t: UInt64],
         parents: [pid_t: pid_t],
         resources: [pid_t: (memoryBytes: UInt64, threadCount: Int)]
@@ -141,6 +165,7 @@ final class SystemMetricsReader {
         var queue: [(pid: pid_t, parent: pid_t?)] = applications.map {
             (pid: $0.processIdentifier, parent: nil)
         }
+
         var visited = Set<pid_t>()
         var cpu: [pid_t: UInt64] = [:]
         var parents: [pid_t: pid_t] = [:]
@@ -148,7 +173,10 @@ final class SystemMetricsReader {
 
         while let entry = queue.first {
             queue.removeFirst()
-            guard visited.insert(entry.pid).inserted else { continue }
+
+            guard visited.insert(entry.pid).inserted else {
+                continue
+            }
 
             var taskInfo = proc_taskinfo()
             let taskInfoSize = Int32(MemoryLayout<proc_taskinfo>.stride)
@@ -164,25 +192,32 @@ final class SystemMetricsReader {
             }
 
             let bufferSize = proc_listchildpids(entry.pid, nil, 0)
-            guard bufferSize > 0 else { continue }
+
+            guard bufferSize > 0 else {
+                continue
+            }
 
             let pidCount = Int(bufferSize) / MemoryLayout<pid_t>.stride
             var childPIDs = [pid_t](repeating: 0, count: pidCount)
             let actualSize = childPIDs.withUnsafeMutableBytes { buffer in
                 proc_listchildpids(entry.pid, buffer.baseAddress, Int32(buffer.count))
             }
-            guard actualSize > 0 else { continue }
+
+            guard actualSize > 0 else {
+                continue
+            }
 
             let actualPIDCount = Int(actualSize) / MemoryLayout<pid_t>.stride
-            queue.append(contentsOf: childPIDs.prefix(actualPIDCount).map {
-                (pid: $0, parent: entry.pid)
-            })
+            queue.append(
+                contentsOf: childPIDs.prefix(actualPIDCount).map {
+                    (pid: $0, parent: entry.pid)
+                })
         }
 
         return (cpu, parents, resources)
     }
 
-    private func descendantPIDs(
+    func descendantPIDs(
         for pid: pid_t,
         parents: [pid_t: pid_t]
     ) -> Set<pid_t> {
@@ -192,7 +227,9 @@ final class SystemMetricsReader {
         while changed {
             changed = false
             for (candidate, parent) in parents where parent == pid || included.contains(parent) {
-                guard included.insert(candidate).inserted else { continue }
+                guard included.insert(candidate).inserted else {
+                    continue
+                }
                 changed = true
             }
         }
@@ -200,7 +237,7 @@ final class SystemMetricsReader {
         return included
     }
 
-    private func aggregateCPUChange(
+    func aggregateCPUChange(
         for pid: pid_t,
         currentCPU: [pid_t: UInt64],
         currentParents: [pid_t: pid_t],
@@ -218,11 +255,12 @@ final class SystemMetricsReader {
             else {
                 return total
             }
+
             return total &+ (current - previous)
         }
     }
 
-    private func sampleTopCPUUsers() -> [ProcessCPUUsage] {
+    func sampleTopCPUUsers() -> [ProcessCPUUsage] {
         let applications = NSWorkspace.shared.runningApplications.filter { application in
             application.processIdentifier > 0
                 && application.processIdentifier != ProcessInfo.processInfo.processIdentifier
@@ -230,8 +268,10 @@ final class SystemMetricsReader {
                 && application.icon != nil
                 && application.localizedName != nil
         }
+
         let processSnapshot = currentProcessSnapshot()
         let now = ProcessInfo.processInfo.systemUptime
+
         defer {
             previousProcessCPU = processSnapshot.cpu
             previousProcessParents = processSnapshot.parents
@@ -240,7 +280,10 @@ final class SystemMetricsReader {
 
         guard let previousProcessTime else {
             return applications.compactMap { application in
-                guard let icon = application.icon, let name = application.localizedName else { return nil }
+                guard let icon = application.icon, let name = application.localizedName else {
+                    return nil
+                }
+
                 return ProcessCPUUsage(
                     id: application.processIdentifier,
                     name: name,
@@ -256,6 +299,7 @@ final class SystemMetricsReader {
             .prefix(5)
             .map { $0 }
         }
+
         let elapsed = max(now - previousProcessTime, 0.001)
 
         return applications.compactMap { application in
@@ -269,10 +313,13 @@ final class SystemMetricsReader {
             guard
                 let icon = application.icon,
                 let name = application.localizedName
-            else { return nil }
+            else {
+                return nil
+            }
 
             let cpuNanoseconds = machTicksToNanoseconds(cpuTicks)
             let cpuFraction = cpuNanoseconds / 1_000_000_000 / elapsed
+
             return ProcessCPUUsage(
                 id: application.processIdentifier,
                 name: name,
@@ -290,16 +337,23 @@ final class SystemMetricsReader {
         .map { $0 }
     }
 
-    private func machTicksToNanoseconds(_ ticks: UInt64) -> Double {
+    func machTicksToNanoseconds(_ ticks: UInt64) -> Double {
         var timebase = mach_timebase_info_data_t()
         mach_timebase_info(&timebase)
+
         return Double(ticks) * Double(timebase.numer) / Double(timebase.denom)
     }
 
-    private func currentNetworkBytes() -> (received: UInt64, sent: UInt64) {
+    func currentNetworkBytes() -> (received: UInt64, sent: UInt64) {
         var firstAddress: UnsafeMutablePointer<ifaddrs>?
-        guard getifaddrs(&firstAddress) == 0, let firstAddress else { return (0, 0) }
-        defer { freeifaddrs(firstAddress) }
+
+        guard getifaddrs(&firstAddress) == 0, let firstAddress else {
+            return (0, 0)
+        }
+
+        defer {
+            freeifaddrs(firstAddress)
+        }
 
         var received: UInt64 = 0
         var sent: UInt64 = 0
@@ -307,17 +361,27 @@ final class SystemMetricsReader {
         var cursor: UnsafeMutablePointer<ifaddrs>? = firstAddress
 
         while let address = cursor {
-            defer { cursor = address.pointee.ifa_next }
+            defer {
+                cursor = address.pointee.ifa_next
+            }
+
             let interface = address.pointee
+
             guard let socketAddress = interface.ifa_addr,
-                  socketAddress.pointee.sa_family == UInt8(AF_LINK),
-                  interface.ifa_flags & UInt32(IFF_UP) != 0,
-                  interface.ifa_flags & UInt32(IFF_LOOPBACK) == 0,
-                  let dataPointer = interface.ifa_data
-            else { continue }
+                socketAddress.pointee.sa_family == UInt8(AF_LINK),
+                interface.ifa_flags & UInt32(IFF_UP) != 0,
+                interface.ifa_flags & UInt32(IFF_LOOPBACK) == 0,
+                let dataPointer = interface.ifa_data
+            else {
+                continue
+            }
 
             let name = String(cString: interface.ifa_name)
-            guard seenInterfaces.insert(name).inserted else { continue }
+
+            guard seenInterfaces.insert(name).inserted else {
+                continue
+            }
+
             let data = dataPointer.assumingMemoryBound(to: if_data.self).pointee
             received &+= UInt64(data.ifi_ibytes)
             sent &+= UInt64(data.ifi_obytes)
@@ -326,24 +390,31 @@ final class SystemMetricsReader {
         return (received, sent)
     }
 
-    private func sampleNetwork() -> (received: Double, sent: Double) {
+    func sampleNetwork() -> (received: Double, sent: Double) {
         let current = currentNetworkBytes()
         let now = ProcessInfo.processInfo.systemUptime
+
         defer {
             previousNetworkBytes = current
             previousNetworkTime = now
         }
 
-        guard let previousNetworkBytes, let previousNetworkTime else { return (0, 0) }
+        guard let previousNetworkBytes, let previousNetworkTime else {
+            return (0, 0)
+        }
+
         let elapsed = max(now - previousNetworkTime, 0.001)
-        let receivedDelta = current.received >= previousNetworkBytes.received
+        let receivedDelta =
+            current.received >= previousNetworkBytes.received
             ? current.received - previousNetworkBytes.received : 0
-        let sentDelta = current.sent >= previousNetworkBytes.sent
+        let sentDelta =
+            current.sent >= previousNetworkBytes.sent
             ? current.sent - previousNetworkBytes.sent : 0
+
         return (Double(receivedDelta) / elapsed, Double(sentDelta) / elapsed)
     }
 
-    private func sampleMemory() -> MemoryUsage {
+    func sampleMemory() -> MemoryUsage {
         var statistics = vm_statistics64()
         var count = mach_msg_type_number_t(
             MemoryLayout<vm_statistics64_data_t>.stride / MemoryLayout<integer_t>.stride
@@ -356,12 +427,17 @@ final class SystemMetricsReader {
         }
 
         let total = ProcessInfo.processInfo.physicalMemory
-        guard result == KERN_SUCCESS else { return MemoryUsage(totalBytes: total) }
+
+        guard result == KERN_SUCCESS else {
+            return MemoryUsage(totalBytes: total)
+        }
 
         var hostPageSize: vm_size_t = 0
+
         guard host_page_size(mach_host_self(), &hostPageSize) == KERN_SUCCESS else {
             return MemoryUsage(totalBytes: total)
         }
+
         let pageSize = UInt64(hostPageSize)
         let internalPages = UInt64(statistics.internal_page_count)
         let purgeablePages = min(UInt64(statistics.purgeable_count), internalPages)

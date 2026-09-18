@@ -1,6 +1,23 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@/s" : {
+      "comment" : "Network transfer rate in bytes per second. The placeholder includes the localized byte unit.",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@/s"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@/s"
+          }
+        }
+      }
+    },
     "%1$@ of %2$@" : {
       "comment" : "Memory usage: the first value is used memory and the second is total memory",
       "localizations" : {

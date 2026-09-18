@@ -38,11 +38,15 @@ struct MemoryUsage: Equatable {
 
     var availableBytes: UInt64 {
         let accountedBytes = min(usedBytes + cachedBytes, totalBytes)
+
         return totalBytes - accountedBytes
     }
 
     var fraction: Double {
-        guard totalBytes > 0 else { return 0 }
+        guard totalBytes > 0 else {
+            return 0
+        }
+
         return min(max(Double(usedBytes) / Double(totalBytes), 0), 1)
     }
 }
@@ -77,7 +81,10 @@ final class ResourceMonitorModel {
     }
 
     var averageCPUFraction: Double {
-        guard !cores.isEmpty else { return 0 }
+        guard !cores.isEmpty else {
+            return 0
+        }
+
         return cores.map(\.fraction).reduce(0, +) / Double(cores.count)
     }
 
@@ -104,7 +111,10 @@ final class ResourceMonitorModel {
     }
 
     func start() {
-        guard !isRunning else { return }
+        guard !isRunning else {
+            return
+        }
+
         isRunning = true
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { [weak self] _ in
@@ -120,8 +130,10 @@ final class ResourceMonitorModel {
         timer = nil
         isRunning = false
     }
+}
 
-    private func refresh() {
+private extension ResourceMonitorModel {
+    func refresh() {
         let sample = reader.sample()
         cores = sample.cores
         gpuFraction = sample.gpuFraction

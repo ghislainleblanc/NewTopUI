@@ -81,27 +81,33 @@ private struct MonitorContent: View {
         .padding(16)
         .frame(width: 420)
         .background {
-            ZStack {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(.ultraThinMaterial)
-
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.11), Color.indigo.opacity(0.055), .clear],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75)
-            }
+            MonitorBackground()
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .gesture(WindowDragGesture())
         .allowsWindowActivationEvents(true)
+    }
+}
+
+private struct MonitorBackground: View {
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.ultraThinMaterial)
+
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.11), Color.indigo.opacity(0.055), .clear],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75)
+        }
     }
 }
 
@@ -171,7 +177,8 @@ private struct ContentHeader: View {
                 symbol: isCompact ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left",
                 help: isCompact
                     ? String(localized: "Use full size", comment: "Tooltip for switching the monitor to full size")
-                    : String(localized: "Use small size", comment: "Tooltip for switching the monitor to 75 percent size"),
+                    : String(
+                        localized: "Use small size", comment: "Tooltip for switching the monitor to 75 percent size"),
                 action: { isCompact.toggle() }
             )
 
@@ -279,11 +286,13 @@ private struct CPUSection: View {
     }
 
     private var coreCountTitle: String {
-        let format = if model.cores.count == 1 {
-            String(localized: "CPU · %lld core", comment: "CPU heading for a computer with one core")
-        } else {
-            String(localized: "CPU · %lld cores", comment: "CPU heading followed by the number of processor cores")
-        }
+        let format =
+            if model.cores.count == 1 {
+                String(localized: "CPU · %lld core", comment: "CPU heading for a computer with one core")
+            } else {
+                String(localized: "CPU · %lld cores", comment: "CPU heading followed by the number of processor cores")
+            }
+
         return String(format: format, locale: .current, Int64(model.cores.count))
     }
 }
@@ -308,21 +317,25 @@ private struct TopCPUUsersSection: View {
             .font(.system(size: 10, weight: .bold, design: .rounded))
 
             if users.isEmpty {
-                    Text(String(localized: "Waiting for process data…", comment: "Message shown before process CPU data is available"))
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .foregroundStyle(.tertiary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    VStack(spacing: 5) {
-                        ForEach(users) { user in
-                            ProcessCPUUserRow(user: user) {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    selectedUser = user
-                                }
+                Text(
+                    String(
+                        localized: "Waiting for process data…",
+                        comment: "Message shown before process CPU data is available")
+                )
+                .font(.system(size: 9, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                VStack(spacing: 5) {
+                    ForEach(users) { user in
+                        ProcessCPUUserRow(user: user) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedUser = user
                             }
                         }
                     }
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
         .overlay(alignment: .topTrailing) {
@@ -360,32 +373,7 @@ private struct ProcessCPUUserRow: View {
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                GeometryReader { proxy in
-                    UnevenRoundedRectangle(
-                        cornerRadii: RectangleCornerRadii(
-                            topLeading: 0,
-                            bottomLeading: 0,
-                            bottomTrailing: 3,
-                            topTrailing: 3
-                        ),
-                        style: .continuous
-                    )
-                    .fill(Color.primary.opacity(0.07))
-                    .overlay(alignment: .leading) {
-                        UnevenRoundedRectangle(
-                            cornerRadii: RectangleCornerRadii(
-                                topLeading: 0,
-                                bottomLeading: 0,
-                                bottomTrailing: 3,
-                                topTrailing: 3
-                            ),
-                            style: .continuous
-                        )
-                        .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
-                        .frame(width: max(3, proxy.size.width * user.fraction))
-                    }
-                }
-                .frame(width: 76, height: 7)
+                ProcessUsageBar(fraction: user.fraction)
 
                 Text(user.fraction.formatted(.percent.precision(.fractionLength(0))))
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
@@ -399,7 +387,8 @@ private struct ProcessCPUUserRow: View {
             String(
                 format: String(
                     localized: "Show details for %1$@, using %2$@ CPU",
-                    comment: "Tooltip for a top CPU user entry. The first placeholder is the app name and the second is CPU usage."
+                    comment:
+                        "Tooltip for a top CPU user entry. The first placeholder is the app name and the second is CPU usage."
                 ),
                 locale: .current,
                 user.name,
@@ -412,6 +401,39 @@ private struct ProcessCPUUserRow: View {
                 comment: "Accessibility label for a top CPU user entry. The placeholder is the app name."
             )
         )
+    }
+}
+
+private struct ProcessUsageBar: View {
+    let fraction: Double
+
+    var body: some View {
+        GeometryReader { proxy in
+            UnevenRoundedRectangle(
+                cornerRadii: RectangleCornerRadii(
+                    topLeading: 0,
+                    bottomLeading: 0,
+                    bottomTrailing: 3,
+                    topTrailing: 3
+                ),
+                style: .continuous
+            )
+            .fill(Color.primary.opacity(0.07))
+            .overlay(alignment: .leading) {
+                UnevenRoundedRectangle(
+                    cornerRadii: RectangleCornerRadii(
+                        topLeading: 0,
+                        bottomLeading: 0,
+                        bottomTrailing: 3,
+                        topTrailing: 3
+                    ),
+                    style: .continuous
+                )
+                .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
+                .frame(width: max(3, proxy.size.width * fraction))
+            }
+        }
+        .frame(width: 76, height: 7)
     }
 }
 
@@ -433,7 +455,8 @@ private struct ProcessDetailOverlay: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(
-                    String(localized: "Close process details", comment: "Accessibility label for closing process details")
+                    String(
+                        localized: "Close process details", comment: "Accessibility label for closing process details")
                 )
             }
 
@@ -472,7 +495,8 @@ private struct ProcessDetailOverlay: View {
 
                 if let launchDate = user.launchDate {
                     ProcessDetailRow(
-                        title: String(localized: "Launched", comment: "Label for the date and time an app was launched."),
+                        title: String(
+                            localized: "Launched", comment: "Label for the date and time an app was launched."),
                         value: launchDate.formatted(date: .abbreviated, time: .shortened)
                     )
                 }
@@ -481,20 +505,26 @@ private struct ProcessDetailOverlay: View {
         .padding(16)
         .frame(width: 320)
         .background {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(nsColor: .windowBackgroundColor))
-
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.regularMaterial)
-                    .opacity(0.65)
-            }
+            ProcessDetailBackground()
         }
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5)
         }
         .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
+    }
+}
+
+private struct ProcessDetailBackground: View {
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor))
+
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.regularMaterial)
+                .opacity(0.65)
+        }
     }
 }
 
@@ -549,56 +579,73 @@ private struct CoreBarGraph: View {
 
             HStack(alignment: .bottom, spacing: spacing) {
                 ForEach(cores) { core in
-                    let barHeight = max(3, 54 * core.fraction)
-                    let trackCornerRadius = min(5, barWidth / 4)
-                    let fillCornerRadius = min(trackCornerRadius, barHeight / 4)
-
-                    VStack(spacing: 4) {
-                        ZStack(alignment: .bottom) {
-                            UnevenRoundedRectangle(
-                                cornerRadii: RectangleCornerRadii(
-                                    topLeading: trackCornerRadius,
-                                    topTrailing: trackCornerRadius
-                                ),
-                                style: .continuous
-                            )
-                            .fill(Color.primary.opacity(0.065))
-
-                            UnevenRoundedRectangle(
-                                cornerRadii: RectangleCornerRadii(
-                                    topLeading: fillCornerRadius,
-                                    topTrailing: fillCornerRadius
-                                ),
-                                style: .continuous
-                            )
-                            .fill(
-                                LinearGradient(
-                                    colors: [.cyan, .indigo],
-                                    startPoint: .bottom,
-                                    endPoint: .top
-                                )
-                            )
-                            .frame(height: barHeight)
-                        }
-                        .frame(width: barWidth, height: 54)
-                        .help(coreHelp(core))
-
-                        Text("\(core.id + 1)")
-                            .font(.system(size: cores.count > 16 ? 6.5 : 7.5, weight: .medium, design: .rounded))
-                            .foregroundStyle(.tertiary)
-                            .frame(width: barWidth)
-                    }
+                    CoreUsageBar(
+                        core: core,
+                        barWidth: barWidth,
+                        isDense: cores.count > 16
+                    )
                 }
             }
         }
         .frame(height: 68)
     }
+}
 
-    private func coreHelp(_ core: CoreUsage) -> String {
+private struct CoreUsageBar: View {
+    let core: CoreUsage
+    let barWidth: CGFloat
+    let isDense: Bool
+
+    var body: some View {
+        let barHeight = max(3, 54 * core.fraction)
+        let trackCornerRadius = min(5, barWidth / 4)
+        let fillCornerRadius = min(trackCornerRadius, barHeight / 4)
+
+        VStack(spacing: 4) {
+            ZStack(alignment: .bottom) {
+                UnevenRoundedRectangle(
+                    cornerRadii: RectangleCornerRadii(
+                        topLeading: trackCornerRadius,
+                        topTrailing: trackCornerRadius
+                    ),
+                    style: .continuous
+                )
+                .fill(Color.primary.opacity(0.065))
+
+                UnevenRoundedRectangle(
+                    cornerRadii: RectangleCornerRadii(
+                        topLeading: fillCornerRadius,
+                        topTrailing: fillCornerRadius
+                    ),
+                    style: .continuous
+                )
+                .fill(
+                    LinearGradient(
+                        colors: [.cyan, .indigo],
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                )
+                .frame(height: barHeight)
+            }
+            .frame(width: barWidth, height: 54)
+            .help(coreHelp(core))
+
+            Text("\(core.id + 1)")
+                .font(.system(size: isDense ? 6.5 : 7.5, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+                .frame(width: barWidth)
+        }
+    }
+}
+
+private extension CoreUsageBar {
+    func coreHelp(_ core: CoreUsage) -> String {
         let format = String(
             localized: "Core %lld: %@",
             comment: "Tooltip for a processor core followed by its number and usage percentage"
         )
+
         return String(
             format: format,
             locale: .current,
@@ -675,6 +722,7 @@ private struct MemorySection: View {
             localized: "%1$@ of %2$@",
             comment: "Memory usage: the first value is used memory and the second is total memory"
         )
+
         return String(
             format: format,
             locale: .current,
@@ -720,12 +768,15 @@ private struct MemoryCard: View {
         .help(
             isShowingDetails
                 ? String(localized: "Click to show memory summary", comment: "Tooltip for the memory details card")
-                : String(localized: "Click for a detailed memory breakdown", comment: "Tooltip for the memory summary card")
+                : String(
+                    localized: "Click for a detailed memory breakdown", comment: "Tooltip for the memory summary card")
         )
         .accessibilityHint(
             isShowingDetails
-                ? String(localized: "Shows the memory summary", comment: "Accessibility hint for the memory details card")
-                : String(localized: "Shows memory categories", comment: "Accessibility hint for the memory summary card")
+                ? String(
+                    localized: "Shows the memory summary", comment: "Accessibility hint for the memory details card")
+                : String(
+                    localized: "Shows memory categories", comment: "Accessibility hint for the memory summary card")
         )
     }
 }
@@ -834,7 +885,10 @@ private struct MemoryBreakdownRow: View {
     }
 
     private var memoryFraction: Double {
-        guard totalBytes > 0 else { return 0 }
+        guard totalBytes > 0 else {
+            return 0
+        }
+
         return min(max(Double(bytes) / Double(totalBytes), 0), 1)
     }
 }
@@ -848,7 +902,8 @@ private struct MiniBarHistory: View {
             let spacing: CGFloat = 2
             let textDescenderInset: CGFloat = 3
             let graphHeight = proxy.size.height - textDescenderInset
-            let width = max((proxy.size.width - CGFloat(max(values.count - 1, 0)) * spacing) / CGFloat(max(values.count, 1)), 2)
+            let width = max(
+                (proxy.size.width - CGFloat(max(values.count - 1, 0)) * spacing) / CGFloat(max(values.count, 1)), 2)
 
             HStack(alignment: .bottom, spacing: spacing) {
                 ForEach(Array(values.enumerated()), id: \.offset) { _, value in
@@ -939,15 +994,20 @@ private struct NetworkLineGraph: View {
         }
         .background(Color.black.opacity(0.09), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
+}
 
-    private func drawLine(
+private extension NetworkLineGraph {
+    func drawLine(
         values: [Double],
         peak: Double,
         size: CGSize,
         color: Color,
         context: inout GraphicsContext
     ) {
-        guard values.count > 1 else { return }
+        guard values.count > 1 else {
+            return
+        }
+
         var path = Path()
         for (index, value) in values.enumerated() {
             let x = size.width * CGFloat(index) / CGFloat(values.count - 1)
@@ -963,13 +1023,23 @@ private struct NetworkLineGraph: View {
     }
 }
 
-private enum ByteFormatting {
+private struct ByteFormatting {}
+
+private extension ByteFormatting {
     static func compact(_ bytes: UInt64) -> String {
         ByteCountFormatter.string(fromByteCount: Int64(clamping: bytes), countStyle: .memory)
     }
 
     static func speed(_ bytesPerSecond: Double) -> String {
         let safeValue = UInt64(max(bytesPerSecond, 0))
-        return "\(ByteCountFormatter.string(fromByteCount: Int64(clamping: safeValue), countStyle: .file))/s"
+        let formattedBytes = ByteCountFormatter.string(
+            fromByteCount: Int64(clamping: safeValue),
+            countStyle: .file
+        )
+
+        return String(
+            localized: "\(formattedBytes)/s",
+            comment: "Network transfer rate in bytes per second. The placeholder includes the localized byte unit."
+        )
     }
 }

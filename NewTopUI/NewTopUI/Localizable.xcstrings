@@ -1,6 +1,23 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ CPU equals one fully used core. Memory and threads include readable child processes." : {
+      "comment" : "The placeholder is a locale-formatted percentage representing one fully used CPU core.",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El %@ de CPU equivale a un núcleo completamente utilizado. La memoria y los hilos incluyen los procesos secundarios accesibles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ du processeur correspond à un cœur entièrement utilisé. La mémoire et les fils incluent les processus enfants accessibles."
+          }
+        }
+      }
+    },
     "%@/s" : {
       "comment" : "Network transfer rate in bytes per second. The placeholder includes the localized byte unit.",
       "localizations" : {
@@ -100,6 +117,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apps"
+          }
+        }
+      }
+    },
+    "Application" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplicación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Application"
           }
         }
       }
@@ -223,6 +256,22 @@
         }
       }
     },
+    "Context switches" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambios de contexto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changements de contexte"
+          }
+        }
+      }
+    },
     "Core %lld: %@" : {
       "comment" : "Tooltip for a processor core followed by its number and usage percentage",
       "localizations" : {
@@ -270,6 +319,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CPU · %lld cœurs"
+          }
+        }
+      }
+    },
+    "CPU time, page faults, and context switches are cumulative for currently readable processes." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El tiempo de CPU, los fallos de página y los cambios de contexto son acumulativos para los procesos actualmente accesibles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le temps processeur, les défauts de page et les changements de contexte sont cumulés pour les processus actuellement accessibles."
           }
         }
       }
@@ -389,6 +454,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Masquer System Pulse"
+          }
+        }
+      }
+    },
+    "Last sampled" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última muestra"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernier relevé"
           }
         }
       }
@@ -562,6 +643,22 @@
         }
       }
     },
+    "Page faults" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fallos de página"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Défauts de page"
+          }
+        }
+      }
+    },
     "Physical RAM not currently assigned to another category" : {
       "comment" : "Tooltip explaining the available memory category",
       "localizations" : {
@@ -626,6 +723,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quitter System Pulse"
+          }
+        }
+      }
+    },
+    "Readable processes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procesos accesibles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processus accessibles"
+          }
+        }
+      }
+    },
+    "Resources · app and child processes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recursos · aplicación y procesos secundarios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ressources · application et processus enfants"
+          }
+        }
+      }
+    },
+    "Running for" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo de ejecución"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durée d’exécution"
+          }
+        }
+      }
+    },
+    "Running threads" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hilos activos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fils actifs"
           }
         }
       }
@@ -732,6 +893,22 @@
         }
       }
     },
+    "This app is no longer being sampled. Showing its last snapshot." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta aplicación ya no se está muestreando. Se muestra su última captura."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette application n’est plus suivie. Son dernier relevé est affiché."
+          }
+        }
+      }
+    },
     "Threads" : {
       "comment" : "Label for the number of threads used by an app.",
       "localizations" : {
@@ -762,6 +939,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Processus les plus gourmands en CPU"
+          }
+        }
+      }
+    },
+    "Total CPU time" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo total de CPU"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temps processeur total"
           }
         }
       }
@@ -864,198 +1057,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Résidente"
-          }
-        }
-      }
-    },
-    "Resources · app and child processes" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ressources · application et processus enfants"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recursos · aplicación y procesos secundarios"
-          }
-        }
-      }
-    },
-    "100% CPU equals one fully used core. Memory and threads include readable child processes." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "100 % du processeur correspond à un cœur entièrement utilisé. La mémoire et les fils incluent les processus enfants accessibles."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El 100 % de CPU equivale a un núcleo completamente utilizado. La memoria y los hilos incluyen los procesos secundarios accesibles."
-          }
-        }
-      }
-    },
-    "Running threads" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fils actifs"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hilos activos"
-          }
-        }
-      }
-    },
-    "Readable processes" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Processus accessibles"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procesos accesibles"
-          }
-        }
-      }
-    },
-    "Total CPU time" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Temps processeur total"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiempo total de CPU"
-          }
-        }
-      }
-    },
-    "Page faults" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Défauts de page"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fallos de página"
-          }
-        }
-      }
-    },
-    "Context switches" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changements de contexte"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cambios de contexto"
-          }
-        }
-      }
-    },
-    "CPU time, page faults, and context switches are cumulative for currently readable processes." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le temps processeur, les défauts de page et les changements de contexte sont cumulés pour les processus actuellement accessibles."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El tiempo de CPU, los fallos de página y los cambios de contexto son acumulativos para los procesos actualmente accesibles."
-          }
-        }
-      }
-    },
-    "Application" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Application"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aplicación"
-          }
-        }
-      }
-    },
-    "Running for" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Durée d’exécution"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiempo de ejecución"
-          }
-        }
-      }
-    },
-    "Last sampled" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dernier relevé"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Última muestra"
-          }
-        }
-      }
-    },
-    "This app is no longer being sampled. Showing its last snapshot." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cette application n’est plus suivie. Son dernier relevé est affiché."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta aplicación ya no se está muestreando. Se muestra su última captura."
           }
         }
       }

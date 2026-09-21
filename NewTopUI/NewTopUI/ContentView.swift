@@ -329,25 +329,28 @@ private struct TopCPUUsersSection: View {
                 VStack(spacing: 5) {
                     ForEach(users.prefix(5)) { user in
                         ProcessCPUUserRow(user: user) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedUser = user
-                            }
+                            selectedUser = user
                         }
                     }
                 }
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
-        .popover(item: $selectedUser, arrowEdge: .trailing) { selection in
-            ProcessDetailOverlay(
-                user: users.first(where: { $0.id == selection.id }) ?? selection,
-                isCurrent: users.contains(where: { $0.id == selection.id })
-            ) {
-                selectedUser = nil
+        .background {
+            ProcessDetailsPopover(isPresented: Binding(
+                get: { selectedUser != nil },
+                set: { if !$0 { selectedUser = nil } }
+            )) {
+                if let selection = selectedUser {
+                    ProcessDetailOverlay(
+                        user: users.first(where: { $0.id == selection.id }) ?? selection,
+                        isCurrent: users.contains(where: { $0.id == selection.id })
+                    ) {
+                        selectedUser = nil
+                    }
+                    .onExitCommand { selectedUser = nil }
+                }
             }
-        }
-        .onExitCommand {
-            selectedUser = nil
         }
     }
 }
@@ -468,7 +471,7 @@ private struct ProcessDetailOverlay: View {
                     }
                     Text(String(localized: "Resources · app and child processes"))
                         .font(.subheadline.weight(.semibold))
-                    Text(String(localized: "100% CPU equals one fully used core. Memory and threads include readable child processes."))
+                    Text(String(localized: "\(1.0.formatted(.percent)) CPU equals one fully used core. Memory and threads include readable child processes.", comment: "The placeholder is a locale-formatted percentage representing one fully used CPU core."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
 

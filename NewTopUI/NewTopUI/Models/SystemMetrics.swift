@@ -7,6 +7,17 @@ struct CoreUsage: Identifiable, Equatable {
     let fraction: Double
 }
 
+struct ProcessResourceDetail: Identifiable {
+    let id: pid_t
+    let name: String
+    let memoryBytes: UInt64
+    let threadCount: Int
+    let runningThreadCount: Int
+    let cpuSeconds: Double
+    let pageFaults: Int
+    let contextSwitches: Int
+}
+
 struct ProcessCPUUsage: Identifiable {
     let id: pid_t
     let name: String
@@ -17,6 +28,8 @@ struct ProcessCPUUsage: Identifiable {
     let bundleIdentifier: String?
     let executableURL: URL?
     let launchDate: Date?
+    let sampledAt: Date
+    let processes: [ProcessResourceDetail]
 }
 
 struct NetworkPoint: Identifiable, Equatable {

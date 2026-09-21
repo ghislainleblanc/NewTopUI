@@ -327,7 +327,7 @@ private struct TopCPUUsersSection: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 VStack(spacing: 5) {
-                    ForEach(users) { user in
+                    ForEach(users.prefix(5)) { user in
                         ProcessCPUUserRow(user: user) {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 selectedUser = user
@@ -338,15 +338,12 @@ private struct TopCPUUsersSection: View {
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
-        .overlay(alignment: .topTrailing) {
-            if let selectedUser {
-                ProcessDetailOverlay(user: selectedUser) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        self.selectedUser = nil
-                    }
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
+        .popover(item: $selectedUser, arrowEdge: .trailing) { selection in
+            ProcessDetailOverlay(
+                user: users.first(where: { $0.id == selection.id }) ?? selection,
+                isCurrent: users.contains(where: { $0.id == selection.id })
+            ) {
+                selectedUser = nil
             }
         }
         .onExitCommand {
@@ -379,7 +376,7 @@ private struct ProcessCPUUserRow: View {
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
-                    .frame(width: 34, alignment: .trailing)
+                    .frame(minWidth: 34, alignment: .trailing)
             }
         }
         .buttonStyle(.plain)
@@ -430,7 +427,7 @@ private struct ProcessUsageBar: View {
                     style: .continuous
                 )
                 .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
-                .frame(width: max(3, proxy.size.width * fraction))
+                .frame(width: max(3, proxy.size.width * min(max(fraction, 0), 1)))
             }
         }
         .frame(width: 76, height: 7)
@@ -439,6 +436,7 @@ private struct ProcessUsageBar: View {
 
 private struct ProcessDetailOverlay: View {
     let user: ProcessCPUUsage
+    let isCurrent: Bool
     let onClose: () -> Void
 
     var body: some View {
@@ -459,59 +457,58 @@ private struct ProcessDetailOverlay: View {
                         localized: "Close process details", comment: "Accessibility label for closing process details")
                 )
             }
+            .padding(.horizontal, 20)
 
-            VStack(spacing: 8) {
-                ProcessDetailRow(
-                    title: String(localized: "CPU Usage", comment: "Label for an app's current CPU usage."),
-                    value: user.fraction.formatted(.percent.precision(.fractionLength(1)))
-                )
-                ProcessDetailRow(
-                    title: String(localized: "Memory Usage", comment: "Label for an app's current memory usage."),
-                    value: ByteFormatting.compact(user.memoryBytes)
-                )
-                ProcessDetailRow(
-                    title: String(localized: "Threads", comment: "Label for the number of threads used by an app."),
-                    value: user.threadCount.formatted()
-                )
-                ProcessDetailRow(
-                    title: String(localized: "Process ID", comment: "Label for an app's process identifier."),
-                    value: String(user.id)
-                )
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    if !isCurrent {
+                        Text(String(localized: "This app is no longer being sampled. Showing its last snapshot."))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text(String(localized: "Resources · app and child processes"))
+                        .font(.subheadline.weight(.semibold))
+                    Text(String(localized: "100% CPU equals one fully used core. Memory and threads include readable child processes."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
 
-                if let bundleIdentifier = user.bundleIdentifier {
-                    ProcessDetailRow(
-                        title: String(localized: "Bundle ID", comment: "Label for an app's bundle identifier."),
-                        value: bundleIdentifier
-                    )
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 16) {
+                        ProcessDetailRow(title: String(localized: "CPU Usage"), value: user.fraction.formatted(.percent.precision(.fractionLength(1))))
+                        ProcessDetailRow(title: String(localized: "Memory Usage"), value: ByteFormatting.compact(user.memoryBytes))
+                        ProcessDetailRow(title: String(localized: "Threads"), value: user.threadCount.formatted())
+                        ProcessDetailRow(title: String(localized: "Running threads"), value: user.processes.reduce(0) { $0 + $1.runningThreadCount }.formatted())
+                        ProcessDetailRow(title: String(localized: "Readable processes"), value: user.processes.count.formatted())
+                        ProcessDetailRow(title: String(localized: "Total CPU time"), value: Duration.seconds(user.processes.reduce(0) { $0 + $1.cpuSeconds }).formatted(.time(pattern: .hourMinuteSecond)))
+                        ProcessDetailRow(title: String(localized: "Page faults"), value: user.processes.reduce(0) { $0 + $1.pageFaults }.formatted())
+                        ProcessDetailRow(title: String(localized: "Context switches"), value: user.processes.reduce(0) { $0 + $1.contextSwitches }.formatted())
+                    }
+                    Text(String(localized: "CPU time, page faults, and context switches are cumulative for currently readable processes."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Divider()
+                    Text(String(localized: "Application"))
+                        .font(.subheadline.weight(.semibold))
+                    ProcessDetailRow(title: String(localized: "Process ID"), value: String(user.id))
+                    if let launchDate = user.launchDate {
+                        ProcessDetailRow(title: String(localized: "Launched"), value: launchDate.formatted(date: .abbreviated, time: .standard))
+                        ProcessDetailRow(title: String(localized: "Running for"), value: Duration.seconds(max(0, user.sampledAt.timeIntervalSince(launchDate))).formatted(.time(pattern: .hourMinuteSecond)))
+                    }
+                    if let bundleIdentifier = user.bundleIdentifier {
+                        ProcessDetailRow(title: String(localized: "Bundle ID"), value: bundleIdentifier)
+                    }
+                    if let executableURL = user.executableURL {
+                        ProcessDetailRow(title: String(localized: "Executable"), value: executableURL.path, lineLimit: nil)
+                    }
+                    ProcessDetailRow(title: String(localized: "Last sampled"), value: user.sampledAt.formatted(date: .omitted, time: .standard))
                 }
-
-                if let executableURL = user.executableURL {
-                    ProcessDetailRow(
-                        title: String(localized: "Executable", comment: "Label for an app's executable path."),
-                        value: executableURL.path,
-                        lineLimit: nil
-                    )
-                }
-
-                if let launchDate = user.launchDate {
-                    ProcessDetailRow(
-                        title: String(
-                            localized: "Launched", comment: "Label for the date and time an app was launched."),
-                        value: launchDate.formatted(date: .abbreviated, time: .shortened)
-                    )
-                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 4)
             }
+            .frame(maxHeight: 480)
         }
-        .padding(16)
-        .frame(width: 320)
-        .background {
-            ProcessDetailBackground()
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5)
-        }
-        .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
+        .padding(.vertical, 20)
+        .frame(width: 440)
+        .background { ProcessDetailBackground() }
     }
 }
 

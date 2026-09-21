@@ -153,7 +153,7 @@ private extension SystemMetricsReader {
     func currentProcessSnapshot() -> (
         cpu: [pid_t: UInt64],
         parents: [pid_t: pid_t],
-        resources: [pid_t: (memoryBytes: UInt64, threadCount: Int)]
+        resources: [pid_t: ProcessResourceDetail]
     ) {
         let ownProcessID = ProcessInfo.processInfo.processIdentifier
         let applications = NSWorkspace.shared.runningApplications.filter {
@@ -169,7 +169,7 @@ private extension SystemMetricsReader {
         var visited = Set<pid_t>()
         var cpu: [pid_t: UInt64] = [:]
         var parents: [pid_t: pid_t] = [:]
-        var resources: [pid_t: (memoryBytes: UInt64, threadCount: Int)] = [:]
+        var resources: [pid_t: ProcessResourceDetail] = [:]
 
         while let entry = queue.first {
             queue.removeFirst()
@@ -182,9 +182,19 @@ private extension SystemMetricsReader {
             let taskInfoSize = Int32(MemoryLayout<proc_taskinfo>.stride)
             if proc_pidinfo(entry.pid, PROC_PIDTASKINFO, 0, &taskInfo, taskInfoSize) == taskInfoSize {
                 cpu[entry.pid] = taskInfo.pti_total_user &+ taskInfo.pti_total_system
-                resources[entry.pid] = (
+                var nameBuffer = [CChar](repeating: 0, count: 1024)
+                let nameLength = proc_name(entry.pid, &nameBuffer, UInt32(nameBuffer.count))
+                let nameBytes = nameBuffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
+                let name = nameLength > 0 ? String(decoding: nameBytes, as: UTF8.self) : String(entry.pid)
+                resources[entry.pid] = ProcessResourceDetail(
+                    id: entry.pid,
+                    name: name,
                     memoryBytes: taskInfo.pti_resident_size,
-                    threadCount: Int(taskInfo.pti_threadnum)
+                    threadCount: Int(taskInfo.pti_threadnum),
+                    runningThreadCount: Int(taskInfo.pti_numrunning),
+                    cpuSeconds: Double(taskInfo.pti_total_user &+ taskInfo.pti_total_system) / 1_000_000_000,
+                    pageFaults: Int(taskInfo.pti_faults),
+                    contextSwitches: Int(taskInfo.pti_csw)
                 )
             }
             if let parent = entry.parent {
@@ -278,29 +288,7 @@ private extension SystemMetricsReader {
             previousProcessTime = now
         }
 
-        guard let previousProcessTime else {
-            return applications.compactMap { application in
-                guard let icon = application.icon, let name = application.localizedName else {
-                    return nil
-                }
-
-                return ProcessCPUUsage(
-                    id: application.processIdentifier,
-                    name: name,
-                    icon: icon,
-                    fraction: 0,
-                    memoryBytes: processSnapshot.resources[application.processIdentifier]?.memoryBytes ?? 0,
-                    threadCount: processSnapshot.resources[application.processIdentifier]?.threadCount ?? 0,
-                    bundleIdentifier: application.bundleIdentifier,
-                    executableURL: application.executableURL,
-                    launchDate: application.launchDate
-                )
-            }
-            .prefix(5)
-            .map { $0 }
-        }
-
-        let elapsed = max(now - previousProcessTime, 0.001)
+        let elapsed = max(now - (previousProcessTime ?? now), 0.001)
 
         return applications.compactMap { application in
             let cpuTicks = aggregateCPUChange(
@@ -317,31 +305,26 @@ private extension SystemMetricsReader {
                 return nil
             }
 
-            let cpuNanoseconds = machTicksToNanoseconds(cpuTicks)
-            let cpuFraction = cpuNanoseconds / 1_000_000_000 / elapsed
+            let cpuFraction = Double(cpuTicks) / 1_000_000_000 / elapsed
+            let processes = descendantPIDs(for: application.processIdentifier, parents: processSnapshot.parents)
+                .compactMap { processSnapshot.resources[$0] }
+                .sorted { $0.id < $1.id }
 
             return ProcessCPUUsage(
                 id: application.processIdentifier,
                 name: name,
                 icon: icon,
-                fraction: min(max(cpuFraction, 0), 1),
-                memoryBytes: processSnapshot.resources[application.processIdentifier]?.memoryBytes ?? 0,
-                threadCount: processSnapshot.resources[application.processIdentifier]?.threadCount ?? 0,
+                fraction: max(cpuFraction, 0),
+                memoryBytes: processes.reduce(0) { $0 + $1.memoryBytes },
+                threadCount: processes.reduce(0) { $0 + $1.threadCount },
                 bundleIdentifier: application.bundleIdentifier,
                 executableURL: application.executableURL,
-                launchDate: application.launchDate
+                launchDate: application.launchDate,
+                sampledAt: Date(),
+                processes: processes
             )
         }
         .sorted { $0.fraction > $1.fraction }
-        .prefix(5)
-        .map { $0 }
-    }
-
-    func machTicksToNanoseconds(_ ticks: UInt64) -> Double {
-        var timebase = mach_timebase_info_data_t()
-        mach_timebase_info(&timebase)
-
-        return Double(ticks) * Double(timebase.numer) / Double(timebase.denom)
     }
 
     func currentNetworkBytes() -> (received: UInt64, sent: UInt64) {

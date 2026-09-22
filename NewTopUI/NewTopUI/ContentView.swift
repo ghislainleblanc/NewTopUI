@@ -479,8 +479,6 @@ private struct ProcessDetailOverlay: View {
                         ProcessDetailRow(title: String(localized: "CPU Usage"), value: user.fraction.formatted(.percent.precision(.fractionLength(1))))
                         ProcessDetailRow(title: String(localized: "Memory Usage"), value: ByteFormatting.compact(user.memoryBytes))
                         ProcessDetailRow(title: String(localized: "Threads"), value: user.threadCount.formatted())
-                        ProcessDetailRow(title: String(localized: "Running threads"), value: user.processes.reduce(0) { $0 + $1.runningThreadCount }.formatted())
-                        ProcessDetailRow(title: String(localized: "Readable processes"), value: user.processes.count.formatted())
                         ProcessDetailRow(title: String(localized: "Total CPU time"), value: Duration.seconds(user.processes.reduce(0) { $0 + $1.cpuSeconds }).formatted(.time(pattern: .hourMinuteSecond)))
                         ProcessDetailRow(title: String(localized: "Page faults"), value: user.processes.reduce(0) { $0 + $1.pageFaults }.formatted())
                         ProcessDetailRow(title: String(localized: "Context switches"), value: user.processes.reduce(0) { $0 + $1.contextSwitches }.formatted())

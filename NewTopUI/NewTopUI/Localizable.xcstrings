@@ -727,22 +727,6 @@
         }
       }
     },
-    "Readable processes" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procesos accesibles"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Processus accessibles"
-          }
-        }
-      }
-    },
     "Resources · app and child processes" : {
       "localizations" : {
         "es" : {
@@ -771,22 +755,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Durée d’exécution"
-          }
-        }
-      }
-    },
-    "Running threads" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hilos activos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fils actifs"
           }
         }
       }

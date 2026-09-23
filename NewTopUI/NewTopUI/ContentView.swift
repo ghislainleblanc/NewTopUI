@@ -509,20 +509,7 @@ private struct ProcessDetailOverlay: View {
         }
         .padding(.vertical, 20)
         .frame(width: 440)
-        .background { ProcessDetailBackground() }
-    }
-}
-
-private struct ProcessDetailBackground: View {
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(nsColor: .windowBackgroundColor))
-
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.regularMaterial)
-                .opacity(0.65)
-        }
+        // Let NSPopover draw one continuous background for the content and its arrow.
     }
 }
 

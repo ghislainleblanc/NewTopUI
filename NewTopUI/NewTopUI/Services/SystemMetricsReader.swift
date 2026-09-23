@@ -4,6 +4,13 @@ import Foundation
 import IOKit
 
 final class SystemMetricsReader {
+    // PROC_PIDTASKINFO reports CPU time in Mach ticks, whose duration varies by architecture.
+    private let secondsPerCPUTick: Double = {
+        var timebase = mach_timebase_info_data_t()
+        mach_timebase_info(&timebase)
+        return Double(timebase.numer) / Double(timebase.denom) / 1_000_000_000
+    }()
+
     private var previousCPUTicks: [[UInt64]]?
     private var previousNetworkBytes: (received: UInt64, sent: UInt64)?
     private var previousNetworkTime: TimeInterval?
@@ -192,7 +199,7 @@ private extension SystemMetricsReader {
                     memoryBytes: taskInfo.pti_resident_size,
                     threadCount: Int(taskInfo.pti_threadnum),
                     runningThreadCount: Int(taskInfo.pti_numrunning),
-                    cpuSeconds: Double(taskInfo.pti_total_user &+ taskInfo.pti_total_system) / 1_000_000_000,
+                    cpuSeconds: Double(taskInfo.pti_total_user &+ taskInfo.pti_total_system) * secondsPerCPUTick,
                     pageFaults: Int(taskInfo.pti_faults),
                     contextSwitches: Int(taskInfo.pti_csw)
                 )
@@ -201,25 +208,24 @@ private extension SystemMetricsReader {
                 parents[entry.pid] = parent
             }
 
-            let bufferSize = proc_listchildpids(entry.pid, nil, 0)
+            // proc_listchildpids returns a PID count, but takes a buffer size in bytes.
+            let pidCount = proc_listchildpids(entry.pid, nil, 0)
 
-            guard bufferSize > 0 else {
+            guard pidCount > 0 else {
                 continue
             }
 
-            let pidCount = Int(bufferSize) / MemoryLayout<pid_t>.stride
-            var childPIDs = [pid_t](repeating: 0, count: pidCount)
-            let actualSize = childPIDs.withUnsafeMutableBytes { buffer in
+            var childPIDs = [pid_t](repeating: 0, count: Int(pidCount))
+            let actualPIDCount = childPIDs.withUnsafeMutableBytes { buffer in
                 proc_listchildpids(entry.pid, buffer.baseAddress, Int32(buffer.count))
             }
 
-            guard actualSize > 0 else {
+            guard actualPIDCount > 0 else {
                 continue
             }
 
-            let actualPIDCount = Int(actualSize) / MemoryLayout<pid_t>.stride
             queue.append(
-                contentsOf: childPIDs.prefix(actualPIDCount).map {
+                contentsOf: childPIDs.prefix(Int(actualPIDCount)).map {
                     (pid: $0, parent: entry.pid)
                 })
         }
@@ -305,7 +311,7 @@ private extension SystemMetricsReader {
                 return nil
             }
 
-            let cpuFraction = Double(cpuTicks) / 1_000_000_000 / elapsed
+            let cpuFraction = Double(cpuTicks) * secondsPerCPUTick / elapsed
             let processes = descendantPIDs(for: application.processIdentifier, parents: processSnapshot.parents)
                 .compactMap { processSnapshot.resources[$0] }
                 .sorted { $0.id < $1.id }

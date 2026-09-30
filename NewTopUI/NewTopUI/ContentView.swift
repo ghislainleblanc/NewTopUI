@@ -6,7 +6,8 @@ struct ContentView: View {
     let onQuit: () -> Void
     let onSizeChange: (CGSize) -> Void
 
-    @State private var isCompact = false
+    @AppStorage("monitorIsCompact") private var isCompact = false
+    
     @State private var unscaledSize = CGSize(width: 420, height: 494)
 
     private var scale: CGFloat {

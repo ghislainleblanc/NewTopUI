@@ -76,7 +76,10 @@ sample, falling back to the last snapshot with a stale-data message when absent.
 ## Presentation and persistence
 
 `ContentView.swift` contains separate structs for the header, metric cards,
-graphs, process details and byte formatting. `monitorIsCompact` is persisted via
+graphs, process details and byte formatting. `GraphTheme.swift` defines the shared graph palettes and the header theme menu.
+`monitorGraphTheme` persists the selected palette via `@AppStorage`; the dashboard
+injects it into the SwiftUI environment for every graph and matching legend.
+`monitorIsCompact` is persisted via
 `@AppStorage`; compact mode scales content to 75%. Geometry changes notify the
 panel controller, which defers resizing and preserves the panel's top edge.
 

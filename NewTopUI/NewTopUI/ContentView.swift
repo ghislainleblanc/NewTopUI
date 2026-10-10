@@ -7,7 +7,8 @@ struct ContentView: View {
     let onSizeChange: (CGSize) -> Void
 
     @AppStorage("monitorIsCompact") private var isCompact = false
-    
+    @AppStorage("monitorGraphTheme") private var graphTheme: GraphTheme = .space
+
     @State private var unscaledSize = CGSize(width: 420, height: 494)
 
     private var scale: CGFloat {
@@ -25,6 +26,7 @@ struct ContentView: View {
             onClose: onClose,
             onQuit: onQuit
         )
+        .environment(\.graphPalette, graphTheme.palette)
         .fixedSize(horizontal: true, vertical: true)
         .onGeometryChange(for: CGSize.self) { proxy in
             proxy.size
@@ -113,6 +115,7 @@ private struct MonitorBackground: View {
 }
 
 private struct ContentHeader: View {
+    @Environment(\.graphPalette) private var palette
     @Binding var isCompact: Bool
     let onQuit: () -> Void
     let onClose: () -> Void
@@ -130,11 +133,11 @@ private struct ContentHeader: View {
         HStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .fill(Color.cyan.opacity(0.15))
+                    .fill(palette.cpu.opacity(0.15))
 
                 Image(systemName: "waveform.path.ecg")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(palette.cpu)
             }
             .frame(width: 32, height: 32)
 
@@ -174,12 +177,15 @@ private struct ContentHeader: View {
 
             Spacer()
 
+            GraphThemeMenu()
+
             HeaderButton(
                 symbol: isCompact ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left",
                 help: isCompact
                     ? String(localized: "Use full size", comment: "Tooltip for switching the monitor to full size")
                     : String(
-                        localized: "Use small size", comment: "Tooltip for switching the monitor to 75 percent size"),
+                        localized: "Use small size", comment: "Tooltip for switching the monitor to 75 percent size"
+                    ),
                 action: { isCompact.toggle() }
             )
 
@@ -271,6 +277,7 @@ private struct SectionTitle: View {
 }
 
 private struct CPUSection: View {
+    @Environment(\.graphPalette) private var palette
     let model: ResourceMonitorModel
 
     var body: some View {
@@ -278,7 +285,7 @@ private struct CPUSection: View {
             SectionTitle(
                 title: coreCountTitle,
                 symbol: "cpu",
-                color: .cyan,
+                color: palette.cpu,
                 value: model.averageCPUFraction.formatted(.percent.precision(.fractionLength(0)))
             )
 
@@ -299,6 +306,7 @@ private struct CPUSection: View {
 }
 
 private struct TopCPUUsersSection: View {
+    @Environment(\.graphPalette) private var palette
     let users: [ProcessCPUUsage]
 
     @State private var selectedUser: ProcessCPUUsage?
@@ -307,7 +315,7 @@ private struct TopCPUUsersSection: View {
         VStack(spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: "list.number")
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(palette.cpu)
 
                 Text(String(localized: "Top CPU consumers", comment: "Heading for the processes using the most CPU"))
                     .textCase(.uppercase)
@@ -321,7 +329,8 @@ private struct TopCPUUsersSection: View {
                 Text(
                     String(
                         localized: "Waiting for process data…",
-                        comment: "Message shown before process CPU data is available")
+                        comment: "Message shown before process CPU data is available"
+                    )
                 )
                 .font(.system(size: 9, weight: .medium, design: .rounded))
                 .foregroundStyle(.tertiary)
@@ -340,7 +349,11 @@ private struct TopCPUUsersSection: View {
         .background {
             ProcessDetailsPopover(isPresented: Binding(
                 get: { selectedUser != nil },
-                set: { if !$0 { selectedUser = nil } }
+                set: {
+                    if !$0 {
+                        selectedUser = nil
+                    }
+                }
             )) {
                 if let selection = selectedUser {
                     ProcessDetailOverlay(
@@ -389,7 +402,7 @@ private struct ProcessCPUUserRow: View {
                 format: String(
                     localized: "Show details for %1$@, using %2$@ CPU",
                     comment:
-                        "Tooltip for a top CPU user entry. The first placeholder is the app name and the second is CPU usage."
+                    "Tooltip for a top CPU user entry. The first placeholder is the app name and the second is CPU usage."
                 ),
                 locale: .current,
                 user.name,
@@ -406,6 +419,7 @@ private struct ProcessCPUUserRow: View {
 }
 
 private struct ProcessUsageBar: View {
+    @Environment(\.graphPalette) private var palette
     let fraction: Double
 
     var body: some View {
@@ -430,7 +444,7 @@ private struct ProcessUsageBar: View {
                     ),
                     style: .continuous
                 )
-                .fill(LinearGradient(colors: [.cyan, .indigo], startPoint: .leading, endPoint: .trailing))
+                .fill(LinearGradient(colors: [palette.cpu, palette.cpuEnd], startPoint: .leading, endPoint: .trailing))
                 .frame(width: max(3, proxy.size.width * min(max(fraction, 0), 1)))
             }
         }
@@ -458,7 +472,8 @@ private struct ProcessDetailOverlay: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(
                     String(
-                        localized: "Close process details", comment: "Accessibility label for closing process details")
+                        localized: "Close process details", comment: "Accessibility label for closing process details"
+                    )
                 )
             }
             .padding(.horizontal, 20)
@@ -578,6 +593,7 @@ private struct CoreBarGraph: View {
 }
 
 private struct CoreUsageBar: View {
+    @Environment(\.graphPalette) private var palette
     let core: CoreUsage
     let barWidth: CGFloat
     let isDense: Bool
@@ -607,7 +623,7 @@ private struct CoreUsageBar: View {
                 )
                 .fill(
                     LinearGradient(
-                        colors: [.cyan, .indigo],
+                        colors: [palette.cpu, palette.cpuEnd],
                         startPoint: .bottom,
                         endPoint: .top
                     )
@@ -642,6 +658,7 @@ private extension CoreUsageBar {
 }
 
 private struct GPUSection: View {
+    @Environment(\.graphPalette) private var palette
     let model: ResourceMonitorModel
 
     var body: some View {
@@ -649,12 +666,12 @@ private struct GPUSection: View {
             SectionTitle(
                 title: String(localized: "GPU", comment: "Graphics processor section heading"),
                 symbol: "square.3.layers.3d",
-                color: .pink,
+                color: palette.gpu,
                 value: model.gpuFraction?.formatted(.percent.precision(.fractionLength(0)))
                     ?? String(localized: "N/A", comment: "Abbreviation shown when a metric is unavailable")
             )
 
-            MiniBarHistory(values: model.gpuHistory, color: .pink)
+            MiniBarHistory(values: model.gpuHistory, color: palette.gpu)
                 .frame(height: 48)
         }
         .frame(maxWidth: .infinity)
@@ -662,6 +679,7 @@ private struct GPUSection: View {
 }
 
 private struct MemorySection: View {
+    @Environment(\.graphPalette) private var palette
     let memory: MemoryUsage
 
     var body: some View {
@@ -669,7 +687,7 @@ private struct MemorySection: View {
             SectionTitle(
                 title: String(localized: "Memory", comment: "Memory section heading"),
                 symbol: "memorychip",
-                color: .orange,
+                color: palette.memory,
                 value: memory.fraction.formatted(.percent.precision(.fractionLength(0)))
             )
 
@@ -679,7 +697,7 @@ private struct MemorySection: View {
                         Capsule().fill(Color.primary.opacity(0.07))
 
                         Capsule()
-                            .fill(LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing))
+                            .fill(LinearGradient(colors: [palette.memory, palette.memoryEnd], startPoint: .leading, endPoint: .trailing))
                             .frame(width: max(4, proxy.size.width * memory.fraction))
                     }
                 }
@@ -692,7 +710,7 @@ private struct MemorySection: View {
 
                     Image(systemName: "arrow.triangle.2.circlepath")
                         .font(.system(size: 8, weight: .semibold))
-                        .foregroundStyle(.orange.opacity(0.8))
+                        .foregroundStyle(palette.memory.opacity(0.8))
                 }
                 .font(.system(size: 10, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
@@ -755,19 +773,23 @@ private struct MemoryCard: View {
             isShowingDetails
                 ? String(localized: "Click to show memory summary", comment: "Tooltip for the memory details card")
                 : String(
-                    localized: "Click for a detailed memory breakdown", comment: "Tooltip for the memory summary card")
+                    localized: "Click for a detailed memory breakdown", comment: "Tooltip for the memory summary card"
+                )
         )
         .accessibilityHint(
             isShowingDetails
                 ? String(
-                    localized: "Shows the memory summary", comment: "Accessibility hint for the memory details card")
+                    localized: "Shows the memory summary", comment: "Accessibility hint for the memory details card"
+                )
                 : String(
-                    localized: "Shows memory categories", comment: "Accessibility hint for the memory summary card")
+                    localized: "Shows memory categories", comment: "Accessibility hint for the memory summary card"
+                )
         )
     }
 }
 
 private struct MemoryBreakdownSection: View {
+    @Environment(\.graphPalette) private var palette
     let memory: MemoryUsage
 
     var body: some View {
@@ -775,14 +797,14 @@ private struct MemoryBreakdownSection: View {
             SectionTitle(
                 title: String(localized: "Memory details", comment: "Detailed memory section heading"),
                 symbol: "arrow.uturn.backward.circle",
-                color: .orange,
+                color: palette.memory,
                 value: ByteFormatting.compact(memory.totalBytes)
             )
 
             VStack(spacing: 1) {
                 MemoryBreakdownRow(
                     title: String(localized: "App", comment: "Memory used by apps category"),
-                    color: .orange,
+                    color: palette.memory,
                     bytes: memory.applicationBytes,
                     totalBytes: memory.totalBytes,
                     help: String(
@@ -793,7 +815,7 @@ private struct MemoryBreakdownSection: View {
 
                 MemoryBreakdownRow(
                     title: String(localized: "Wired", comment: "Wired memory category"),
-                    color: .pink,
+                    color: palette.memoryEnd,
                     bytes: memory.wiredBytes,
                     totalBytes: memory.totalBytes,
                     help: String(
@@ -804,7 +826,7 @@ private struct MemoryBreakdownSection: View {
 
                 MemoryBreakdownRow(
                     title: String(localized: "Compressed", comment: "Compressed memory category"),
-                    color: .purple,
+                    color: palette.compressed,
                     bytes: memory.compressedBytes,
                     totalBytes: memory.totalBytes,
                     help: String(
@@ -815,7 +837,7 @@ private struct MemoryBreakdownSection: View {
 
                 MemoryBreakdownRow(
                     title: String(localized: "Cached", comment: "Cached memory category"),
-                    color: .cyan,
+                    color: palette.cached,
                     bytes: memory.cachedBytes,
                     totalBytes: memory.totalBytes,
                     help: String(
@@ -826,7 +848,7 @@ private struct MemoryBreakdownSection: View {
 
                 MemoryBreakdownRow(
                     title: String(localized: "Available", comment: "Available memory category"),
-                    color: .green,
+                    color: palette.available,
                     bytes: memory.availableBytes,
                     totalBytes: memory.totalBytes,
                     help: String(
@@ -889,7 +911,8 @@ private struct MiniBarHistory: View {
             let textDescenderInset: CGFloat = 3
             let graphHeight = proxy.size.height - textDescenderInset
             let width = max(
-                (proxy.size.width - CGFloat(max(values.count - 1, 0)) * spacing) / CGFloat(max(values.count, 1)), 2)
+                (proxy.size.width - CGFloat(max(values.count - 1, 0)) * spacing) / CGFloat(max(values.count, 1)), 2
+            )
 
             HStack(alignment: .bottom, spacing: spacing) {
                 ForEach(Array(values.enumerated()), id: \.offset) { _, value in
@@ -905,6 +928,7 @@ private struct MiniBarHistory: View {
 }
 
 private struct NetworkSection: View {
+    @Environment(\.graphPalette) private var palette
     let model: ResourceMonitorModel
 
     var body: some View {
@@ -918,14 +942,14 @@ private struct NetworkSection: View {
                 NetworkSpeed(
                     label: String(localized: "DOWN", comment: "Abbreviated network download label"),
                     symbol: "arrow.down",
-                    color: .green,
+                    color: palette.download,
                     bytes: model.receivedBytesPerSecond
                 )
 
                 NetworkSpeed(
                     label: String(localized: "UP", comment: "Abbreviated network upload label"),
                     symbol: "arrow.up",
-                    color: .blue,
+                    color: palette.upload,
                     bytes: model.sentBytesPerSecond
                 )
             }
@@ -959,6 +983,7 @@ private struct NetworkSpeed: View {
 }
 
 private struct NetworkLineGraph: View {
+    @Environment(\.graphPalette) private var palette
     let points: [NetworkPoint]
 
     var body: some View {
@@ -975,8 +1000,8 @@ private struct NetworkLineGraph: View {
                 context.stroke(gridLine, with: .color(.white.opacity(0.055)), lineWidth: 0.5)
             }
 
-            drawLine(values: received, peak: peak, size: size, color: .green, context: &context)
-            drawLine(values: sent, peak: peak, size: size, color: .blue, context: &context)
+            drawLine(values: received, peak: peak, size: size, color: palette.download, context: &context)
+            drawLine(values: sent, peak: peak, size: size, color: palette.upload, context: &context)
         }
         .background(Color.black.opacity(0.09), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }

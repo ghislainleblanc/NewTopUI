@@ -87,6 +87,7 @@ skill-creator's `quick_validate.py` when that tool is available.
 | Launch and status item | Launch, left-click twice, then inspect the right-click menu | Panel appears/toggles; localized Show/Hide and About controls work. |
 | Sampling lifecycle | Show, hide, show; select 1/3/5-second intervals | Sampling stops while hidden, resumes on show, and interval changes leave one timer. |
 | Layout | Toggle compact/full size, drag, inspect both appearance modes | 75% compact scaling, appropriate panel size, usable controls and no clipping. |
+| Graph themes | Select each header palette in full and compact modes, flip the memory card, then relaunch | CPU, process bars, GPU, memory and both network lines update together; legends match and the selection persists. |
 | Process details | Open/close repeatedly; dismiss outside, with Escape, and with its close button during refresh | No transaction warnings/crash; state stays synchronized; body and pointer form one native surface. |
 | Stale process data | Open details for an app that exits or is no longer sampled | Last snapshot remains identified as stale. |
 | CPU units | Observe a real busy app with one and multiple busy cores over several intervals | One busy core is near 100% process usage; multicore values can exceed 100%; bars stay within bounds. |

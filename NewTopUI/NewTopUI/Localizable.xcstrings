@@ -239,6 +239,22 @@
         }
       }
     },
+    "Colour theme" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema de colores"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thème de couleurs"
+          }
+        }
+      }
+    },
     "Compressed" : {
       "comment" : "Compressed memory category",
       "localizations" : {
@@ -403,6 +419,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mémoire de fichiers et purgeable que macOS peut réutiliser rapidement"
+          }
+        }
+      }
+    },
+    "Forest" : {
+      "comment" : "Green graph colour theme",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bosque"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forêt"
           }
         }
       }
@@ -643,6 +676,23 @@
         }
       }
     },
+    "Ocean" : {
+      "comment" : "Blue graph colour theme",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Océano"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Océan"
+          }
+        }
+      }
+    },
     "Page faults" : {
       "localizations" : {
         "es" : {
@@ -840,6 +890,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Affiche le résumé de la mémoire"
+          }
+        }
+      }
+    },
+    "Space" : {
+      "comment" : "Cosmic graph colour theme",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espacio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espace"
+          }
+        }
+      }
+    },
+    "Sunset" : {
+      "comment" : "Warm graph colour theme",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atardecer"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coucher de soleil"
           }
         }
       }

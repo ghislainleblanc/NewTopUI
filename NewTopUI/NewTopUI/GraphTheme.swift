@@ -16,19 +16,19 @@ enum GraphTheme: String, CaseIterable {
     var palette: GraphPalette {
         switch self {
         case .space:
-            GraphPalette(cpu: .purple, cpuEnd: .indigo, gpu: .pink, memory: .indigo,
+            GraphPalette(cpu: .purple, cpuEnd: .indigo, gpu: .cyan, memory: .indigo,
                          memoryEnd: .purple, compressed: .pink, cached: .cyan, available: .mint,
                          download: .cyan, upload: .purple)
         case .ocean:
-            GraphPalette(cpu: .cyan, cpuEnd: .blue, gpu: .teal, memory: .blue,
+            GraphPalette(cpu: .cyan, cpuEnd: .blue, gpu: .blue, memory: .blue,
                          memoryEnd: .indigo, compressed: .purple, cached: .cyan, available: .mint,
                          download: .cyan, upload: .indigo)
         case .sunset:
-            GraphPalette(cpu: .orange, cpuEnd: .pink, gpu: .purple, memory: .yellow,
+            GraphPalette(cpu: .orange, cpuEnd: .pink, gpu: .pink, memory: .yellow,
                          memoryEnd: .orange, compressed: .purple, cached: .pink, available: .red,
                          download: .orange, upload: .pink)
         case .forest:
-            GraphPalette(cpu: .mint, cpuEnd: .green, gpu: .teal, memory: .green,
+            GraphPalette(cpu: .mint, cpuEnd: .green, gpu: .green, memory: .green,
                          memoryEnd: .teal, compressed: .yellow, cached: .mint, available: .cyan,
                          download: .green, upload: .teal)
         }

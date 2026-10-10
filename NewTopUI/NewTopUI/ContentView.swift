@@ -917,7 +917,7 @@ private struct MiniBarHistory: View {
             HStack(alignment: .bottom, spacing: spacing) {
                 ForEach(Array(values.enumerated()), id: \.offset) { _, value in
                     Capsule()
-                        .fill(color.opacity(0.25 + value * 0.75))
+                        .fill(color.opacity(0.65 + value * 0.35))
                         .frame(width: width, height: max(3, graphHeight * value))
                 }
             }

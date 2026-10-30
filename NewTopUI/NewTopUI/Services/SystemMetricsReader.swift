@@ -7,7 +7,7 @@ final class SystemMetricsReader {
     // PROC_PIDTASKINFO reports CPU time in Mach ticks, whose duration varies by architecture.
     private let secondsPerCPUTick: Double = {
         var timebase = mach_timebase_info_data_t()
-        mach_timebase_info(&timebase)
+        unsafe mach_timebase_info(&timebase)
         return Double(timebase.numer) / Double(timebase.denom) / 1_000_000_000
     }()
 
@@ -52,7 +52,7 @@ private extension SystemMetricsReader {
         var processorInfo: processor_info_array_t?
         var processorInfoCount: mach_msg_type_number_t = 0
 
-        let result = host_processor_info(
+        let result = unsafe host_processor_info(
             mach_host_self(),
             PROCESSOR_CPU_LOAD_INFO,
             &processorCount,
@@ -60,20 +60,20 @@ private extension SystemMetricsReader {
             &processorInfoCount
         )
 
-        guard result == KERN_SUCCESS, let processorInfo else {
+        guard result == KERN_SUCCESS, let processorInfo = unsafe processorInfo else {
             return nil
         }
 
         defer {
             let byteCount = vm_size_t(processorInfoCount) * vm_size_t(MemoryLayout<integer_t>.stride)
-            vm_deallocate(mach_task_self_, vm_address_t(bitPattern: processorInfo), byteCount)
+            unsafe vm_deallocate(mach_task_self_, vm_address_t(bitPattern: processorInfo), byteCount)
         }
 
         return (0 ..< Int(processorCount)).map { core in
             let offset = core * Int(CPU_STATE_MAX)
 
             return (0 ..< Int(CPU_STATE_MAX)).map { state in
-                UInt64(UInt32(bitPattern: processorInfo[offset + state]))
+                unsafe UInt64(UInt32(bitPattern: processorInfo[offset + state]))
             }
         }
     }
@@ -107,13 +107,13 @@ private extension SystemMetricsReader {
     }
 
     func sampleGPU() -> Double? {
-        guard let matching = IOServiceMatching("IOAccelerator") else {
+        guard let matching = unsafe IOServiceMatching("IOAccelerator") else {
             return nil
         }
 
         var iterator: io_iterator_t = 0
 
-        guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else {
+        guard unsafe IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else {
             return nil
         }
 
@@ -130,7 +130,7 @@ private extension SystemMetricsReader {
             }
 
             guard
-                let property = IORegistryEntryCreateCFProperty(
+                let property = unsafe IORegistryEntryCreateCFProperty(
                     service,
                     "PerformanceStatistics" as CFString,
                     kCFAllocatorDefault,
@@ -187,10 +187,10 @@ private extension SystemMetricsReader {
 
             var taskInfo = proc_taskinfo()
             let taskInfoSize = Int32(MemoryLayout<proc_taskinfo>.stride)
-            if proc_pidinfo(entry.pid, PROC_PIDTASKINFO, 0, &taskInfo, taskInfoSize) == taskInfoSize {
+            if unsafe proc_pidinfo(entry.pid, PROC_PIDTASKINFO, 0, &taskInfo, taskInfoSize) == taskInfoSize {
                 cpu[entry.pid] = taskInfo.pti_total_user &+ taskInfo.pti_total_system
                 var nameBuffer = [CChar](repeating: 0, count: 1024)
-                let nameLength = proc_name(entry.pid, &nameBuffer, UInt32(nameBuffer.count))
+                let nameLength = unsafe proc_name(entry.pid, &nameBuffer, UInt32(nameBuffer.count))
                 let nameBytes = nameBuffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
                 let name = nameLength > 0 ? String(decoding: nameBytes, as: UTF8.self) : String(entry.pid)
                 resources[entry.pid] = ProcessResourceDetail(
@@ -217,7 +217,7 @@ private extension SystemMetricsReader {
 
             var childPIDs = [pid_t](repeating: 0, count: Int(pidCount))
             let actualPIDCount = childPIDs.withUnsafeMutableBytes { buffer in
-                proc_listchildpids(entry.pid, buffer.baseAddress, Int32(buffer.count))
+                unsafe proc_listchildpids(entry.pid, buffer.baseAddress, Int32(buffer.count))
             }
 
             guard actualPIDCount > 0 else {
@@ -336,42 +336,42 @@ private extension SystemMetricsReader {
     func currentNetworkBytes() -> (received: UInt64, sent: UInt64) {
         var firstAddress: UnsafeMutablePointer<ifaddrs>?
 
-        guard getifaddrs(&firstAddress) == 0, let firstAddress else {
+        guard unsafe getifaddrs(&firstAddress) == 0, let firstAddress = unsafe firstAddress else {
             return (0, 0)
         }
 
         defer {
-            freeifaddrs(firstAddress)
+            unsafe freeifaddrs(firstAddress)
         }
 
         var received: UInt64 = 0
         var sent: UInt64 = 0
         var seenInterfaces = Set<String>()
-        var cursor: UnsafeMutablePointer<ifaddrs>? = firstAddress
+        var cursor: UnsafeMutablePointer<ifaddrs>? = unsafe firstAddress
 
-        while let address = cursor {
+        while let address = unsafe cursor {
             defer {
-                cursor = address.pointee.ifa_next
+                unsafe cursor = address.pointee.ifa_next
             }
 
-            let interface = address.pointee
+            let interface = unsafe address.pointee
 
-            guard let socketAddress = interface.ifa_addr,
-                socketAddress.pointee.sa_family == UInt8(AF_LINK),
-                interface.ifa_flags & UInt32(IFF_UP) != 0,
-                interface.ifa_flags & UInt32(IFF_LOOPBACK) == 0,
-                let dataPointer = interface.ifa_data
+            guard let socketAddress = unsafe interface.ifa_addr,
+                unsafe socketAddress.pointee.sa_family == UInt8(AF_LINK),
+                unsafe interface.ifa_flags & UInt32(IFF_UP) != 0,
+                unsafe interface.ifa_flags & UInt32(IFF_LOOPBACK) == 0,
+                let dataPointer = unsafe interface.ifa_data
             else {
                 continue
             }
 
-            let name = String(cString: interface.ifa_name)
+            let name = unsafe String(cString: interface.ifa_name)
 
             guard seenInterfaces.insert(name).inserted else {
                 continue
             }
 
-            let data = dataPointer.assumingMemoryBound(to: if_data.self).pointee
+            let data = unsafe dataPointer.assumingMemoryBound(to: if_data.self).pointee
             received &+= UInt64(data.ifi_ibytes)
             sent &+= UInt64(data.ifi_obytes)
         }
@@ -410,8 +410,8 @@ private extension SystemMetricsReader {
         )
 
         let result = withUnsafeMutablePointer(to: &statistics) { pointer in
-            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { reboundPointer in
-                host_statistics64(mach_host_self(), HOST_VM_INFO64, reboundPointer, &count)
+            unsafe pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { reboundPointer in
+                unsafe host_statistics64(mach_host_self(), HOST_VM_INFO64, reboundPointer, &count)
             }
         }
 
@@ -423,7 +423,7 @@ private extension SystemMetricsReader {
 
         var hostPageSize: vm_size_t = 0
 
-        guard host_page_size(mach_host_self(), &hostPageSize) == KERN_SUCCESS else {
+        guard unsafe host_page_size(mach_host_self(), &hostPageSize) == KERN_SUCCESS else {
             return MemoryUsage(totalBytes: total)
         }
 

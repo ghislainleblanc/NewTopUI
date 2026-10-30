@@ -288,7 +288,7 @@ private extension MonitorPanelController {
             if let savedOrigin = savedPanelOrigin() {
                 panel.setFrameOrigin(savedOrigin)
                 hasPositionedPanel = true
-            } else if let buttonWindow = button.window {
+            } else if let buttonWindow = unsafe button.window {
                 let buttonFrame = buttonWindow.convertToScreen(button.frame)
                 let screenFrame = buttonWindow.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
                 let panelSize = panel.frame.size
@@ -415,7 +415,7 @@ private extension MonitorPanelController {
         let screenNumberKey = NSDeviceDescriptionKey("NSScreenNumber")
         guard
             let screenNumber = screen.deviceDescription[screenNumberKey] as? NSNumber,
-            let displayUUID = CGDisplayCreateUUIDFromDisplayID(screenNumber.uint32Value)?.takeRetainedValue()
+            let displayUUID = unsafe CGDisplayCreateUUIDFromDisplayID(screenNumber.uint32Value)?.takeRetainedValue()
         else {
             return nil
         }

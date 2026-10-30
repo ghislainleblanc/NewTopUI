@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		8565971E300FC01F002C489F /* SwiftFormat in Frameworks */ = {isa = PBXBuildFile; productRef = 8565971D300FC01F002C489F /* SwiftFormat */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		85F0AFF7300DA9C20036AEE2 /* System Pulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "System Pulse.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -27,7 +23,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8565971E300FC01F002C489F /* SwiftFormat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +65,6 @@
 			);
 			name = NewTopUI;
 			packageProductDependencies = (
-				8565971D300FC01F002C489F /* SwiftFormat */,
 			);
 			productName = NewTopUI;
 			productReference = 85F0AFF7300DA9C20036AEE2 /* System Pulse.app */;
@@ -103,7 +97,6 @@
 			mainGroup = 85F0AFEE300DA9C20036AEE2;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				8565971C300FC01F002C489F /* XCRemoteSwiftPackageReference "SwiftFormat" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 85F0AFF8300DA9C20036AEE2 /* Products */;
@@ -271,7 +264,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 9Y789C28ZZ;
 				ENABLE_APP_SANDBOX = YES;
@@ -296,6 +289,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_MEMORY_SAFETY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 			};
@@ -308,7 +302,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 9Y789C28ZZ;
 				ENABLE_APP_SANDBOX = YES;
@@ -333,6 +327,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_MEMORY_SAFETY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 			};
@@ -360,25 +355,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		8565971C300FC01F002C489F /* XCRemoteSwiftPackageReference "SwiftFormat" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/nicklockwood/SwiftFormat";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.62.1;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		8565971D300FC01F002C489F /* SwiftFormat */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8565971C300FC01F002C489F /* XCRemoteSwiftPackageReference "SwiftFormat" */;
-			productName = SwiftFormat;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 85F0AFEF300DA9C20036AEE2 /* Project object */;
 }

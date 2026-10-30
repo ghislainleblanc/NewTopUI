@@ -301,7 +301,7 @@ private struct CPUSection: View {
                 String(localized: "CPU · %lld cores", comment: "CPU heading followed by the number of processor cores")
             }
 
-        return String(format: format, locale: .current, Int64(model.cores.count))
+        return unsafe String(format: format, locale: .current, Int64(model.cores.count))
     }
 }
 
@@ -398,7 +398,7 @@ private struct ProcessCPUUserRow: View {
         }
         .buttonStyle(.plain)
         .help(
-            String(
+            unsafe String(
                 format: String(
                     localized: "Show details for %1$@, using %2$@ CPU",
                     comment:
@@ -648,7 +648,7 @@ private extension CoreUsageBar {
             comment: "Tooltip for a processor core followed by its number and usage percentage"
         )
 
-        return String(
+        return unsafe String(
             format: format,
             locale: .current,
             Int64(core.id + 1),
@@ -727,7 +727,7 @@ private struct MemorySection: View {
             comment: "Memory usage: the first value is used memory and the second is total memory"
         )
 
-        return String(
+        return unsafe String(
             format: format,
             locale: .current,
             ByteFormatting.compact(memory.usedBytes),

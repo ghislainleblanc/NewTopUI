@@ -85,7 +85,7 @@ private extension ProcessDetailsPopover.Coordinator {
             if popover.isShown { popover.close() }
             return
         }
-        guard anchor.window != nil else { return }
+        guard unsafe anchor.window != nil else { return }
 
         if let host {
             host.rootView = source.content()

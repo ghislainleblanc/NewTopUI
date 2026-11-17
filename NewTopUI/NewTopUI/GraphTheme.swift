@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 /// Colour choices for the dashboard graphs. Raw values are persisted in UserDefaults.
@@ -22,13 +21,8 @@ enum GraphTheme: String, CaseIterable {
 
     var palette: GraphPalette {
         switch self {
-        case .system: Self.accentPalette(Color(nsColor: .controlAccentColor))
-        case .multicolour:
-            GraphPalette(
-                cpu: .purple, cpuEnd: .indigo, gpu: .cyan, memory: .indigo,
-                memoryEnd: .purple, compressed: .pink, cached: .cyan, available: .mint,
-                download: .cyan, upload: .purple
-            )
+        case .system: Self.accentPalette(.accentColor)
+        case .multicolour: Self.accentPalette(.accent)
         case .blue: Self.accentPalette(.blue)
         case .purple: Self.accentPalette(.purple)
         case .pink: Self.accentPalette(.pink)

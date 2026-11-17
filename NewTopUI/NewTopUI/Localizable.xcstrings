@@ -154,6 +154,23 @@
         }
       }
     },
+    "Blue" : {
+      "comment" : "Graph theme option",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azul"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bleu"
+          }
+        }
+      }
+    },
     "Bundle ID" : {
       "comment" : "Label for an app's bundle identifier.",
       "localizations" : {
@@ -423,23 +440,6 @@
         }
       }
     },
-    "Forest" : {
-      "comment" : "Green graph colour theme",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bosque"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forêt"
-          }
-        }
-      }
-    },
     "GPU" : {
       "comment" : "Graphics processor section heading",
       "localizations" : {
@@ -453,6 +453,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "GPU"
+          }
+        }
+      }
+    },
+    "Graphite" : {
+      "comment" : "Graph theme option",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grafito"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graphite"
+          }
+        }
+      }
+    },
+    "Green" : {
+      "comment" : "Graph theme option",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verde"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vert"
           }
         }
       }
@@ -643,6 +677,23 @@
         }
       }
     },
+    "Multicolour" : {
+      "comment" : "Graph theme option",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolore"
+          }
+        }
+      }
+    },
     "N/A" : {
       "comment" : "Abbreviation shown when a metric is unavailable",
       "localizations" : {
@@ -676,19 +727,19 @@
         }
       }
     },
-    "Ocean" : {
-      "comment" : "Blue graph colour theme",
+    "Orange" : {
+      "comment" : "Graph theme option",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Océano"
+            "value" : "Naranja"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Océan"
+            "value" : "Orange"
           }
         }
       }
@@ -743,6 +794,23 @@
         }
       }
     },
+    "Pink" : {
+      "comment" : "Graph theme option",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rosa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rose"
+          }
+        }
+      }
+    },
     "Process ID" : {
       "comment" : "Label for an app's process identifier.",
       "localizations" : {
@@ -760,6 +828,23 @@
         }
       }
     },
+    "Purple" : {
+      "comment" : "Graph theme option",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Morado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Violet"
+          }
+        }
+      }
+    },
     "Quit System Pulse" : {
       "comment" : "Menu item that quits the app\nTooltip for the button that quits the app",
       "localizations" : {
@@ -773,6 +858,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quitter System Pulse"
+          }
+        }
+      }
+    },
+    "Red" : {
+      "comment" : "Graph theme option",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rojo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rouge"
           }
         }
       }
@@ -890,40 +992,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Affiche le résumé de la mémoire"
-          }
-        }
-      }
-    },
-    "Space" : {
-      "comment" : "Cosmic graph colour theme",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Espacio"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Espace"
-          }
-        }
-      }
-    },
-    "Sunset" : {
-      "comment" : "Warm graph colour theme",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Atardecer"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coucher de soleil"
           }
         }
       }
@@ -1079,6 +1147,23 @@
         }
       }
     },
+    "Use System Colour" : {
+      "comment" : "Graph theme that follows the macOS accent colour",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar el color del sistema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser la couleur du système"
+          }
+        }
+      }
+    },
     "Waiting for process data…" : {
       "comment" : "Message shown before process CPU data is available",
       "localizations" : {
@@ -1109,6 +1194,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Résidente"
+          }
+        }
+      }
+    },
+    "Yellow" : {
+      "comment" : "Graph theme option",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amarillo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaune"
           }
         }
       }

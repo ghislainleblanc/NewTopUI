@@ -1,37 +1,63 @@
+import AppKit
 import SwiftUI
 
-/// Shared palette for every graph and its legend. Raw values are persisted in UserDefaults.
+/// Colour choices for the dashboard graphs. Raw values are persisted in UserDefaults.
 enum GraphTheme: String, CaseIterable {
-    case space, ocean, sunset, forest
+    case system, multicolour, blue, purple, pink, red, orange, yellow, green, graphite
 
     var title: String {
         switch self {
-        case .space: String(localized: "Space", comment: "Cosmic graph colour theme")
-        case .ocean: String(localized: "Ocean", comment: "Blue graph colour theme")
-        case .sunset: String(localized: "Sunset", comment: "Warm graph colour theme")
-        case .forest: String(localized: "Forest", comment: "Green graph colour theme")
+        case .system: String(localized: "Use System Colour", comment: "Graph theme that follows the macOS accent colour")
+        case .multicolour: String(localized: "Multicolour", comment: "Graph theme option")
+        case .blue: String(localized: "Blue", comment: "Graph theme option")
+        case .purple: String(localized: "Purple", comment: "Graph theme option")
+        case .pink: String(localized: "Pink", comment: "Graph theme option")
+        case .red: String(localized: "Red", comment: "Graph theme option")
+        case .orange: String(localized: "Orange", comment: "Graph theme option")
+        case .yellow: String(localized: "Yellow", comment: "Graph theme option")
+        case .green: String(localized: "Green", comment: "Graph theme option")
+        case .graphite: String(localized: "Graphite", comment: "Graph theme option")
         }
     }
 
     var palette: GraphPalette {
         switch self {
-        case .space:
-            GraphPalette(cpu: .purple, cpuEnd: .indigo, gpu: .cyan, memory: .indigo,
-                         memoryEnd: .purple, compressed: .pink, cached: .cyan, available: .mint,
-                         download: .cyan, upload: .purple)
-        case .ocean:
-            GraphPalette(cpu: .cyan, cpuEnd: .blue, gpu: .blue, memory: .blue,
-                         memoryEnd: .indigo, compressed: .purple, cached: .cyan, available: .mint,
-                         download: .cyan, upload: .indigo)
-        case .sunset:
-            GraphPalette(cpu: .orange, cpuEnd: .pink, gpu: .pink, memory: .yellow,
-                         memoryEnd: .orange, compressed: .purple, cached: .pink, available: .red,
-                         download: .orange, upload: .pink)
-        case .forest:
-            GraphPalette(cpu: .mint, cpuEnd: .green, gpu: .green, memory: .green,
-                         memoryEnd: .teal, compressed: .yellow, cached: .mint, available: .cyan,
-                         download: .green, upload: .teal)
+        case .system: Self.accentPalette(Color(nsColor: .controlAccentColor))
+        case .multicolour:
+            GraphPalette(
+                cpu: .purple, cpuEnd: .indigo, gpu: .cyan, memory: .indigo,
+                memoryEnd: .purple, compressed: .pink, cached: .cyan, available: .mint,
+                download: .cyan, upload: .purple
+            )
+        case .blue: Self.accentPalette(.blue)
+        case .purple: Self.accentPalette(.purple)
+        case .pink: Self.accentPalette(.pink)
+        case .red: Self.accentPalette(.red)
+        case .orange: Self.accentPalette(.orange)
+        case .yellow: Self.accentPalette(.yellow)
+        case .green: Self.accentPalette(.green)
+        case .graphite: Self.accentPalette(.gray)
         }
+    }
+}
+
+private extension GraphTheme {
+    static func accentPalette(_ accent: Color) -> GraphPalette {
+        let shadedAccent = accent.mix(with: .primary, by: 0.25)
+        let contrastingAccent = accent.mix(with: .primary, by: 0.75)
+
+        return GraphPalette(
+            cpu: accent,
+            cpuEnd: shadedAccent,
+            gpu: accent,
+            memory: accent,
+            memoryEnd: shadedAccent,
+            compressed: contrastingAccent,
+            cached: accent.opacity(0.65),
+            available: .secondary,
+            download: accent,
+            upload: contrastingAccent
+        )
     }
 }
 
@@ -49,11 +75,11 @@ struct GraphPalette {
 }
 
 extension EnvironmentValues {
-    @Entry var graphPalette: GraphPalette = GraphTheme.space.palette
+    @Entry var graphPalette: GraphPalette = GraphTheme.system.palette
 }
 
 struct GraphThemeMenu: View {
-    @AppStorage("monitorGraphTheme") private var theme: GraphTheme = .space
+    @AppStorage("monitorGraphTheme") private var theme: GraphTheme = .system
 
     var body: some View {
         Menu {

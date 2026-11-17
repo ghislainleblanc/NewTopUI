@@ -7,7 +7,7 @@ struct ContentView: View {
     let onSizeChange: (CGSize) -> Void
 
     @AppStorage("monitorIsCompact") private var isCompact = false
-    @AppStorage("monitorGraphTheme") private var graphTheme: GraphTheme = .space
+    @AppStorage("monitorGraphTheme") private var graphTheme: GraphTheme = .system
 
     @State private var unscaledSize = CGSize(width: 420, height: 494)
 
@@ -94,6 +94,8 @@ private struct MonitorContent: View {
 }
 
 private struct MonitorBackground: View {
+    @Environment(\.graphPalette) private var palette
+
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -102,7 +104,7 @@ private struct MonitorBackground: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.white.opacity(0.11), Color.indigo.opacity(0.055), .clear],
+                        colors: [Color.white.opacity(0.11), palette.cpuEnd.opacity(0.055), .clear],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )

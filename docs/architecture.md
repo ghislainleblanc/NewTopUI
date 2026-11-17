@@ -77,12 +77,12 @@ sample, falling back to the last snapshot with a stale-data message when absent.
 
 `ContentView.swift` contains separate structs for the header, metric cards,
 graphs, process details and byte formatting. `GraphTheme.swift` defines the
-shared graph palettes and the header theme menu. The default follows the macOS
-accent colour. Multicolour and the standard macOS accent choices are available
-as app-specific overrides. `monitorGraphTheme` persists the selection via
-`@AppStorage` and falls back to the system colour for unrecognised values. The
-dashboard injects the palette into the SwiftUI environment for every graph and
-matching legend.
+shared graph palettes and the header theme menu. Use System Colour uses SwiftUI's
+effective accent colour, which macOS resolves to the app's blue `AccentColor`
+asset in Multicolour mode. The app's Multicolour override uses that asset
+directly. `monitorGraphTheme` persists the selection via `@AppStorage` and
+falls back to the system colour for unrecognised values. The dashboard injects
+the palette into the SwiftUI environment for every graph and matching legend.
 `monitorIsCompact` is persisted via
 `@AppStorage`; compact mode scales content to 75%. Geometry changes notify the
 panel controller, which defers resizing and preserves the panel's top edge.

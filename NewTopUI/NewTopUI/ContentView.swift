@@ -48,6 +48,8 @@ private struct MonitorContent: View {
     let onQuit: () -> Void
 
     var body: some View {
+        let panelShape = RoundedRectangle(cornerRadius: 24, style: .continuous)
+
         VStack(spacing: 12) {
             ContentHeader(
                 isCompact: $isCompact,
@@ -83,36 +85,11 @@ private struct MonitorContent: View {
         }
         .padding(16)
         .frame(width: 420)
-        .background {
-            MonitorBackground()
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .clipShape(panelShape)
+        .glassEffect(.regular, in: panelShape)
+        .contentShape(panelShape)
         .gesture(WindowDragGesture())
         .allowsWindowActivationEvents(true)
-    }
-}
-
-private struct MonitorBackground: View {
-    @Environment(\.graphPalette) private var palette
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.ultraThinMaterial)
-
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.11), palette.cpuEnd.opacity(0.055), .clear],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75)
-        }
     }
 }
 

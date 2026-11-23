@@ -406,6 +406,40 @@
         }
       }
     },
+    "Efficiency" : {
+      "comment" : "CPU graph caption for efficiency cores",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eficiencia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efficacité"
+          }
+        }
+      }
+    },
+    "Efficiency core %lld: %@" : {
+      "comment" : "Efficiency core number and utilization for hover help and accessibility",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Núcleo de eficiencia %lld: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cœur écoénergétique %lld : %@"
+          }
+        }
+      }
+    },
     "Executable" : {
       "comment" : "Label for an app's executable path.",
       "localizations" : {
@@ -760,6 +794,40 @@
         }
       }
     },
+    "Performance" : {
+      "comment" : "CPU graph caption for performance cores",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendimiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance"
+          }
+        }
+      }
+    },
+    "Performance core %lld: %@" : {
+      "comment" : "Performance core number and utilization for hover help and accessibility",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Núcleo de rendimiento %lld: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cœur de performance %lld : %@"
+          }
+        }
+      }
+    },
     "Physical RAM not currently assigned to another category" : {
       "comment" : "Tooltip explaining the available memory category",
       "localizations" : {
@@ -1075,6 +1143,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Temps processeur total"
+          }
+        }
+      }
+    },
+    "Unclassified" : {
+      "comment" : "CPU graph caption for cores whose type is unavailable",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin clasificar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non classés"
           }
         }
       }

@@ -4,7 +4,7 @@ System Pulse is a lightweight macOS menu-bar monitor built with SwiftUI and AppK
 
 ## Features
 
-- Per-core CPU utilization with an average CPU percentage
+- Per-core CPU utilization grouped by efficiency and performance where available, with an overall average
 - Top CPU-consuming applications, including their app icons
 - GPU utilization when supported by the hardware
 - Memory usage, including application, wired, compressed, cached, and available memory

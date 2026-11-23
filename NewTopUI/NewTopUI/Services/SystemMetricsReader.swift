@@ -4,6 +4,8 @@ import Foundation
 import IOKit
 
 final class SystemMetricsReader {
+    private let coreTypes = readCoreTypes()
+
     // PROC_PIDTASKINFO reports CPU time in Mach ticks, whose duration varies by architecture.
     private let secondsPerCPUTick: Double = {
         var timebase = mach_timebase_info_data_t()
@@ -47,6 +49,35 @@ final class SystemMetricsReader {
 }
 
 private extension SystemMetricsReader {
+    static func readCoreTypes() -> [Int: CPUCoreType] {
+        let cpus = unsafe IORegistryEntryFromPath(kIOMainPortDefault, "IODeviceTree:/cpus")
+        guard cpus != IO_OBJECT_NULL else { return [:] }
+        defer { IOObjectRelease(cpus) }
+
+        var children: io_iterator_t = 0
+        guard unsafe IORegistryEntryGetChildIterator(cpus, kIODeviceTreePlane, &children) == KERN_SUCCESS else {
+            return [:]
+        }
+        defer { IOObjectRelease(children) }
+
+        var types: [Int: CPUCoreType] = [:]
+        while case let cpu = IOIteratorNext(children), cpu != IO_OBJECT_NULL {
+            defer { IOObjectRelease(cpu) }
+
+            // Device-tree node numbers can have gaps on chips with disabled cores.
+            guard
+                let id = unsafe IORegistryEntryCreateCFProperty(cpu, "logical-cpu-id" as CFString, kCFAllocatorDefault, 0)?
+                    .takeRetainedValue() as? Int,
+                let cluster = unsafe IORegistryEntryCreateCFProperty(cpu, "cluster-type" as CFString, kCFAllocatorDefault, 0)?
+                    .takeRetainedValue() as? Data
+            else { continue }
+
+            let code = String(decoding: cluster.prefix { $0 != 0 }, as: UTF8.self)
+            types[id] = CPUCoreType(rawValue: code) ?? .unknown
+        }
+        return types
+    }
+
     func currentCPUTicks() -> [[UInt64]]? {
         var processorCount: natural_t = 0
         var processorInfo: processor_info_array_t?
@@ -88,7 +119,7 @@ private extension SystemMetricsReader {
         }
 
         guard let previous = previousCPUTicks, previous.count == current.count else {
-            return current.indices.map { CoreUsage(id: $0, fraction: 0) }
+            return current.indices.map { CoreUsage(id: $0, type: coreTypes[$0] ?? .unknown, fraction: 0) }
         }
 
         return current.indices.map { core in
@@ -102,7 +133,7 @@ private extension SystemMetricsReader {
             let idle = differences[Int(CPU_STATE_IDLE)]
             let fraction = total > 0 ? Double(total - idle) / Double(total) : 0
 
-            return CoreUsage(id: core, fraction: min(max(fraction, 0), 1))
+            return CoreUsage(id: core, type: coreTypes[core] ?? .unknown, fraction: min(max(fraction, 0), 1))
         }
     }
 

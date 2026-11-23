@@ -55,7 +55,7 @@ returns a `SystemMetricsSample`; the model then updates observable properties.
 
 | Metric | Source and interpretation |
 | --- | --- |
-| Per-core CPU | `host_processor_info`; non-idle tick delta divided by total delta, bounded to 0–1. Dashboard CPU is the arithmetic average across cores. |
+| Per-core CPU | `host_processor_info` supplies tick deltas. The reader caches `cluster-type` by `logical-cpu-id` from the IOKit device tree so the graph can group efficiency and performance cores. Missing or unrecognized types retain a numbered utilization bar. The overall percentage averages the non-idle fractions across all cores. |
 | Application CPU | Regular applications from `NSWorkspace`, excluding this app; Darwin task counters plus discoverable descendants, converted from Mach ticks and divided by elapsed uptime. One busy core is fraction 1; multiple cores may exceed it. |
 | Process resources | Readable `PROC_PIDTASKINFO` entries supply resident bytes, threads, CPU time, faults and context switches. Memory/threads sum the current readable tree; cumulative counters describe currently readable processes. |
 | GPU | IOKit `IOAccelerator` performance statistics; maximum compatible device reading, or `nil` when unavailable. |

@@ -552,28 +552,84 @@ private struct CoreBarGraph: View {
     let cores: [CoreUsage]
 
     var body: some View {
+        let groups = Dictionary(grouping: cores, by: \.type)
+        let showsTypes = groups[.efficiency] != nil || groups[.performance] != nil
+
         GeometryReader { proxy in
             let spacing: CGFloat = cores.count > 16 ? 3 : 5
-            let availableWidth = proxy.size.width - CGFloat(max(cores.count - 1, 0)) * spacing
-            let barWidth = max(availableWidth / CGFloat(max(cores.count, 1)), 4)
+            let groupSpacing = spacing + 5
+            let gaps = CGFloat(cores.count - groups.count) * spacing + CGFloat(max(groups.count - 1, 0)) * groupSpacing
+            let barWidth = max((proxy.size.width - gaps) / CGFloat(max(cores.count, 1)), 1)
 
-            HStack(alignment: .bottom, spacing: spacing) {
-                ForEach(cores) { core in
-                    CoreUsageBar(
-                        core: core,
-                        barWidth: barWidth,
-                        isDense: cores.count > 16
-                    )
+            HStack(alignment: .top, spacing: groupSpacing) {
+                ForEach(CPUCoreType.allCases, id: \.self) { type in
+                    if let group = groups[type] {
+                        CoreBarGroup(
+                            cores: group,
+                            type: showsTypes ? type : nil,
+                            barWidth: barWidth,
+                            spacing: spacing,
+                            isDense: cores.count > 16
+                        )
+                    }
                 }
             }
         }
-        .frame(height: 68)
+        .frame(height: showsTypes ? 82 : 68)
+    }
+}
+
+private struct CoreBarGroup: View {
+    @Environment(\.graphPalette) private var palette
+    let cores: [CoreUsage]
+    let type: CPUCoreType?
+    let barWidth: CGFloat
+    let spacing: CGFloat
+    let isDense: Bool
+
+    private var color: Color {
+        switch type {
+        case .efficiency: palette.cpu.mix(with: .primary, by: 0.65)
+        case .performance, nil: palette.cpu
+        case .unknown: .secondary
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .bottom, spacing: spacing) {
+                ForEach(cores) { core in
+                    CoreUsageBar(core: core, color: color, barWidth: barWidth, isDense: isDense)
+                }
+            }
+
+            if let type {
+                ViewThatFits(in: .horizontal) {
+                    Text(type.graphTitle).fixedSize()
+                    Text(verbatim: type.rawValue)
+                }
+                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            }
+        }
+        .frame(width: CGFloat(cores.count) * barWidth + CGFloat(cores.count - 1) * spacing)
+    }
+}
+
+private extension CPUCoreType {
+    var graphTitle: String {
+        switch self {
+        case .efficiency: String(localized: "Efficiency")
+        case .performance: String(localized: "Performance")
+        case .unknown: String(localized: "Unclassified")
+        }
     }
 }
 
 private struct CoreUsageBar: View {
-    @Environment(\.graphPalette) private var palette
     let core: CoreUsage
+    let color: Color
     let barWidth: CGFloat
     let isDense: Bool
 
@@ -591,7 +647,7 @@ private struct CoreUsageBar: View {
                     ),
                     style: .continuous
                 )
-                .fill(Color.primary.opacity(0.065))
+                .fill(color.opacity(0.12))
 
                 UnevenRoundedRectangle(
                     cornerRadii: RectangleCornerRadii(
@@ -600,32 +656,31 @@ private struct CoreUsageBar: View {
                     ),
                     style: .continuous
                 )
-                .fill(
-                    LinearGradient(
-                        colors: [palette.cpu, palette.cpuEnd],
-                        startPoint: .bottom,
-                        endPoint: .top
-                    )
-                )
+                .fill(color.gradient)
                 .frame(height: barHeight)
             }
             .frame(width: barWidth, height: 54)
-            .help(coreHelp(core))
 
             Text("\(core.id + 1)")
                 .font(.system(size: isDense ? 6.5 : 7.5, weight: .medium, design: .rounded))
                 .foregroundStyle(.tertiary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
                 .frame(width: barWidth)
         }
+        .help(coreHelp)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(coreHelp)
     }
 }
 
 private extension CoreUsageBar {
-    func coreHelp(_ core: CoreUsage) -> String {
-        let format = String(
-            localized: "Core %lld: %@",
-            comment: "Tooltip for a processor core followed by its number and usage percentage"
-        )
+    var coreHelp: String {
+        let format = switch core.type {
+        case .efficiency: String(localized: "Efficiency core %lld: %@")
+        case .performance: String(localized: "Performance core %lld: %@")
+        case .unknown: String(localized: "Core %lld: %@")
+        }
 
         return unsafe String(
             format: format,

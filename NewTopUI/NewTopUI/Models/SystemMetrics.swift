@@ -2,8 +2,15 @@ import AppKit
 import Foundation
 import Observation
 
+enum CPUCoreType: String, CaseIterable {
+    case efficiency = "E"
+    case performance = "P"
+    case unknown = "?"
+}
+
 struct CoreUsage: Identifiable, Equatable {
     let id: Int
+    let type: CPUCoreType
     let fraction: Double
 }
 
@@ -110,8 +117,7 @@ final class ResourceMonitorModel {
     }
 
     init() {
-        let coreCount = max(ProcessInfo.processInfo.processorCount, 1)
-        cores = (0 ..< coreCount).map { CoreUsage(id: $0, fraction: 0) }
+        cores = []
         gpuFraction = nil
         gpuHistory = Array(repeating: 0, count: 28)
         networkHistory = (0 ..< 36).map {

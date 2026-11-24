@@ -85,8 +85,8 @@ private struct MonitorContent: View {
         }
         .padding(16)
         .frame(width: 420)
-        .clipShape(panelShape)
         .glassEffect(.regular, in: panelShape)
+        .clipShape(panelShape)
         .contentShape(panelShape)
         .gesture(WindowDragGesture())
         .allowsWindowActivationEvents(true)

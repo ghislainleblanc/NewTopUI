@@ -82,7 +82,7 @@ final class MonitorPanelController: NSObject {
         panel.contentViewController = hostingController
         panel.backgroundColor = .clear
         panel.isOpaque = false
-        panel.hasShadow = true
+        panel.hasShadow = false
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
         panel.level = .floating
